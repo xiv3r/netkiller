@@ -20,7 +20,7 @@ chmod +x netkiller.sh
 ./netkiller.sh
 ```
 
-### To estore the target users internet connections.
+### To restore the target wifi clients internet connection.
 ```
 iptables -F
 iptables -X
