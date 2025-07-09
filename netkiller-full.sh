@@ -4,13 +4,16 @@
 # Requires: arpspoof, iptables, ipcalc, and root privileges
 
 echo "Enter Router Gateway IP:"
-read -p ">" GATEWAY
+read -p "> " GATEWAY
 echo "Enter Target IP(s) or (space-separated) Multi IP's or Subnet (10.0.0.1/20):"
-read -p ">" TARGET_IPS
+read -p "> " TARGET_IPS
 echo "Enter Interface (wlan0):"
-read -p ">" INTERFACE
+read -p "> " INTERFACE
+
+# Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
+# Flush all existing iptables rules
 iptables -F
 iptables -X
 iptables -t nat -F
