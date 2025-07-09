@@ -18,6 +18,14 @@ iptables -F
 iptables -X
 iptables -t nat -F
 
+# Remove Iptables rules
+cat > /bin/iptables-clear << EOF
+iptables -F
+iptables -X
+iptables -t nat -F
+EOF
+chmod 755 /bin/iptables-clear
+
 for TARGET_IP in $TARGET_IPS; do
     iptables -A FORWARD -s "$TARGET_IP" -j DROP
     iptables -A FORWARD -d "$TARGET_IP" -j DROP
