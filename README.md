@@ -26,3 +26,9 @@ iptables -F
 iptables -X
 iptables -t nat -F
 ```
+
+# ⚠️ DISCLAIMERS
+
+`The Netkiller tool is intended solely for authorized testing, educational purposes, and network security auditing. Unauthorized use of this software against systems you do not own or have explicit permission to test is strictly prohibited and may be punishable by law.`
+
+`The developers and distributors of the Netkiller tool shall not be held liable for any damage, loss of data, or legal consequences arising from the use or misuse of this software. You assume full responsibility for your actions and any outcomes resulting from its use.`
