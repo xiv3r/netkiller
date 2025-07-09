@@ -36,15 +36,17 @@ chmod +x netkiller.sh
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/setup.png">
 </div>
 
-## Restore the target wifi clients internet connection.
-```
-iptables-clear
-```
-
 # Result
+> effects on target wifi clients connection.
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
 </div>
+
+# Restore
+> restore the target wifi clients internet connection.
+```
+iptables-clear
+```
 
 # ⚠️ DISCLAIMERS
 
