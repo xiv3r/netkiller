@@ -3,12 +3,9 @@
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Requires: arpspoof, iptables, ipcalc, and root privileges
 
-echo "Enter Router Gateway IP:"
-read -p " " GATEWAY
-echo "Enter Target IP(s) or (space-separated) Multi IP's or Subnet (10.0.0.1/20): 
-read -p " " TARGET_IPS
-echo "Enter Interface (wlan0):
-read -p " " INTERFACE
+read -p "Enter Router Gateway IP:" GATEWAY
+read -p "Enter Target Subnet (10.0.0.1/20):" TARGET_IPS
+read -p "Enter Interface (wlan0):" INTERFACE
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
