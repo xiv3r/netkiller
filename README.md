@@ -13,6 +13,11 @@ netkiller - is a tool that kills the wifi clients internet connection without di
 ```
 sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcalc -y
 ```
+# Features
+- `Single Target` - 192.168.1.100
+- `Multiple Targets` - 192.168.1.100 192.168.1.105 192.168.1.110 (Space-Separated)
+- `All Targets` - 192.168.1.1/24 or 10.0.0.1/20
+
 # Git clone
 ```
 git clone https://github.com/xiv3r/netkiller.git
