@@ -5,7 +5,7 @@
 
 echo "Enter Router Gateway IP:"
 read -p "> " GATEWAY
-echo " Enter Target IP (space-separated for multiple): "
+echo "Enter Target IP (space-separated for multiple):"
 read -p "> " TARGET_IPS
 echo "Enter Interface (wlan0):"
 read -p "> " INTERFACE
