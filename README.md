@@ -20,12 +20,17 @@ chmod +x netkiller.sh
 ./netkiller.sh
 ```
 
-### To restore the target wifi clients internet connection.
+## Restore the target wifi clients internet connection.
 ```
 iptables -F
 iptables -X
 iptables -t nat -F
 ```
+
+# Proof
+<div align="center">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
+</div>
 
 # ⚠️ DISCLAIMERS
 
