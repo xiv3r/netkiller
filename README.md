@@ -35,9 +35,7 @@ chmod +x netkiller.sh
 
 ## Restore the target wifi clients internet connection.
 ```
-iptables -F
-iptables -X
-iptables -t nat -F
+iptables-clear
 ```
 
 # Result
