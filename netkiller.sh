@@ -3,8 +3,8 @@
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Requires: arpspoof, iptables, and root privileges
 
-read -p "Enter Gateway IP: " GATEWAY
-read -p "Enter Target IP(s) (space-separated for multiple): " TARGET_IPS
+read -p "Enter Router Gateway IP: " GATEWAY
+read -p "Enter Target IP (space-separated for multiple): " TARGET_IPS
 read -p "Enter Interface: " INTERFACE
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
