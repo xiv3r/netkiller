@@ -40,7 +40,7 @@ iptables -X
 iptables -t nat -F
 ```
 
-# Proof
+# Result
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
 </div>
