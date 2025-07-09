@@ -18,6 +18,14 @@ iptables -F
 iptables -X
 iptables -t nat -F
 
+# Remove Iptables rules
+cat > /bin/iptables-clear << EOF
+iptables -F
+iptables -X
+iptables -t nat -F
+EOF
+chmod 755 /bin/iptables-clear
+
 # Function to expand a subnet to individual IPs (using ipcalc)
 expand_subnet() {
     SUBNET=$1
