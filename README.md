@@ -1,6 +1,10 @@
 # About netkiller
 netkiller - is a tool that kills the wifi clients internet connection without disconnecting them from the wifi AP.
 
+<div align="center">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
+</div>
+
 # Requirements
 - Debian/Kali/Ubuntu/Termux(root)
 - Wireless or Built-in wifi Adapter
