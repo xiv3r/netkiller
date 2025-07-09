@@ -11,7 +11,7 @@ netkiller - is a tool that kills the wifi clients internet connection without di
 
 # Dependencies
 ```
-sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff -y
+sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcalc -y
 ```
 # Git clone
 ```
