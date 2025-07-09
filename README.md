@@ -6,7 +6,7 @@ netkiller - is a tool that kills the wifi clients internet connection without di
 </div>
 
 # Requirements
-- Debian/Kali/Ubuntu/Termux(root)
+- Debian/Kali/Ubuntu/Parrot/Termux(root)
 - Wireless or Built-in wifi Adapter
 
 # Dependencies
@@ -23,6 +23,10 @@ chmod +x netkiller.sh
 ```
 ./netkiller.sh
 ```
+<details><summary></summary>
+<div align="center">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/setup.png">
+</div></details>
 
 ## Restore the target wifi clients internet connection.
 ```
