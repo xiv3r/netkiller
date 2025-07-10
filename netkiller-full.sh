@@ -93,3 +93,4 @@ for TARGET in $TARGET_IPS; do
         ) &
     fi
 done
+echo "Attacks are running in the background...!!!"
