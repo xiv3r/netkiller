@@ -20,6 +20,8 @@ iptables -t nat -F
 
 # Remove Iptables rules
 cat > /bin/netkiller-stop << EOF
+#!/bin/sh
+
 iptables -F
 iptables -X
 iptables -t nat -F
