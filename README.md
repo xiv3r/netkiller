@@ -6,8 +6,9 @@ netkiller - is a tool that kills the wifi clients internet connection without di
 </div>
 
 # Requirements
-- Debian/Kali/Ubuntu/Parrot/Termux(root)
-- Wireless or Built-in wifi Adapter
+- Debian/Kali/Ubuntu/Parrot
+- Kali Termux(root)
+- Wireless or Built-in Wifi Adapter
 
 <details><summary></summary>
 
