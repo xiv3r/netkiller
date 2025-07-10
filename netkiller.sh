@@ -29,11 +29,9 @@ EOF
 chmod 755 /bin/netkiller-stop
 
 for TARGET in $TARGET_IPS; do
-    # Basic blocking rules
+    # Block all traffic of the target wifi clients
     iptables -I FORWARD -s "$TARGET" -j DROP
     iptables -I FORWARD -d "$TARGET" -j DROP
-    iptables -I INPUT -s "$TARGET" -j DROP
-    iptables -I OUTPUT -d "$TARGET" -j DROP
     iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
   
     (
