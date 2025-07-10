@@ -76,3 +76,4 @@ for TARGET in $TARGET_IPS; do
     fi
 done
 echo "Attacks are running in the background...!!!"
+echo "Type: netkiller-stop to restore the wifi clients internet connection..."
