@@ -47,18 +47,18 @@ sudo bash netkiller-full.sh
 </div>
 
 # Result
-> effects on target wifi clients connection.
+> Impact of the remote attack on the target wifi clients connection.
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
 </div>
 
 # Restore
-> restore the target wifi clients internet connection.
+> Restore the target wifi clients internet connection remotely.
 ```
 netkiller-stop
 ```
 
-# ⚠️ DISCLAIMERS
+# ⚠️ DISCLAIMER
 
 `The Netkiller tool is intended solely for authorized testing, educational purposes, and network security auditing. Unauthorized use of this software against systems you do not own or have explicit permission to test is strictly prohibited and may be punishable by law.`
 
