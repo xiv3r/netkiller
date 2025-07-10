@@ -9,6 +9,8 @@ netkiller - is a tool that kills the wifi clients internet connection without di
 - Debian/Kali/Ubuntu/Parrot/Termux(root)
 - Wireless or Built-in wifi Adapter
 
+<details><summary></summary>
+
 # Dependencies
 ```
 sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcalc -y
@@ -19,6 +21,13 @@ sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcal
 git clone https://github.com/xiv3r/netkiller.git
 cd netkiller
 chmod +x netkiller.sh
+```
+</details>
+
+# Auto install
+```
+sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sh && cd netkiller
+
 ```
 # Run
 ```
