@@ -63,6 +63,9 @@ sudo bash netkiller-full.sh
 > Impact of the remote attack on the target wifi clients connection.
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/noinet.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/proc.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/dhcpstarvation.png">
 </div>
 
 # Restore
