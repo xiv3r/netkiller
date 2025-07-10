@@ -55,7 +55,7 @@ sudo bash netkiller-full.sh
 # Restore
 > restore the target wifi clients internet connection.
 ```
-iptables-clear
+netkiller-stop
 ```
 
 # ⚠️ DISCLAIMERS
