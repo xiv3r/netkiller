@@ -56,7 +56,7 @@ sudo bash netkiller-full.sh
 # Example 
 
 <div align="center">
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/setup.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/cmd.png.jpg">
 </div>
 
 # Result
