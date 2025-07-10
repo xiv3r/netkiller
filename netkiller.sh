@@ -23,6 +23,7 @@ cat > /bin/netkiller-stop << EOF
 iptables -F
 iptables -X
 iptables -t nat -F
+pkill
 echo "Wifi clients connections are restored"
 EOF
 chmod 755 /bin/netkiller-stop
