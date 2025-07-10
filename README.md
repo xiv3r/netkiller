@@ -64,9 +64,12 @@ sudo bash netkiller-full.sh
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/noinet.png">
+
+<details><summary>Expand</summary>
+  
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/proc.png">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/dhcpstarvation.png">
-</div>
+</details></div>
 
 # Restore
 > Restore the target wifi clients internet connection remotely.
