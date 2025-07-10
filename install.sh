@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # Dependencies
-sudo apt update && sudo apt upgrade -y
 sudo apt install git iptables dsniff ipcalc -y
 
 # Repo
