@@ -34,7 +34,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcal
 ```
 git clone https://github.com/xiv3r/netkiller.git
 cd netkiller
-chmod +x netkiller.sh
+chmod +x *.sh
 ```
 </details>
 
@@ -43,6 +43,10 @@ chmod +x netkiller.sh
 sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sh && cd netkiller
 
 ```
+```
+chmod +x *.sh
+```
+
 # Run
 ```
 sudo bash netkiller-full.sh
