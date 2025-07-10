@@ -10,6 +10,16 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 - [Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
 - Openstick | Wireless | LAN | Built-in Wifi Adapter
 
+# Features
+- `single target`
+- `multiple targets`
+- `all tragets`
+- `block internet traffic`
+- `redirect traffic`
+- `intercept traffic`
+- `block DNS mDNS`
+- `bypass rp_filters arp_filters`
+
 <details><summary></summary>
 
 # Dependencies
