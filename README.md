@@ -13,15 +13,11 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 # Features
 - `single target`
 - `multiple targets`
-- `all tragets`
+- `all subnet tragets`
 - `block internet traffic`
-- `redirect traffic`
 - `intercept traffic`
-- `block DNS mDNS`
-- `bypass rp_filters arp_filters`
 - `dhcp starvation`
 - `arp spoofing`
-- `dns spoofing`
 
 <details><summary></summary>
 
