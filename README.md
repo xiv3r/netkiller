@@ -19,6 +19,7 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 - `intercept traffic`
 - `block DNS mDNS`
 - `bypass rp_filters arp_filters`
+- `dhcp starvation`
 
 <details><summary></summary>
 
