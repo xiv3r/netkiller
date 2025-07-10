@@ -7,7 +7,7 @@ echo "Enter Router Gateway IP:"
 read -p "> " GATEWAY
 echo "Enter Target IP(s) or (space-separated) Multi IP's or Subnet (10.0.0.1/20):"
 read -p "> " TARGET_IPS
-echo "Enter Interface (wlan0):"
+echo "Enter Wifi Interface (wlan0):"
 read -p "> " INTERFACE
 
 # Enable IP Forwarding
