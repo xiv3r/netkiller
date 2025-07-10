@@ -32,7 +32,7 @@ sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubuserc
 ```
 # Run
 ```
-./netkiller-full.sh
+sudo bash netkiller-full.sh
 ```
 
 # Usage
