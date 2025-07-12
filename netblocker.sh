@@ -2,7 +2,7 @@
 
 INTERFACE="wlan0"
 GATEWAY=$(ip route | grep default | awk '{print $3}')
-MYIP=$(ip addr show wlan0 | awk '/inet / {print $2}' | cut -d/ -f1)
+MYIP=$(ip addr show $INTERFACE | awk '/inet / {print $2}' | cut -d/ -f1)
 NETWORK_CIDR=$(ip addr show $INTERFACE | grep 'inet ' | awk '{print $2}')
 
 # Get first and last usable IP
