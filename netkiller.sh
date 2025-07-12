@@ -17,7 +17,7 @@ GATEWAY="${INET:-$GW}"
 
 # Detect Subnet
 MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-echo "Enter multiple target: e.g 192.168.1.110 192.168.1.111"
+echo "Enter multiple target: $MASK"
 read -p "> " IPS
 TARGET_IPS="${IPS:-$MASK}"
 
