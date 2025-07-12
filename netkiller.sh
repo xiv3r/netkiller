@@ -60,7 +60,7 @@ chmod 755 /bin/netkiller-stop
 
 for TARGET in $TARGET_IPS; do
     (
-       # Block all trafficexcept the device ip and gateway (bidirectional)
+       # Block all traffic except the device ip and gateway (bidirectional)
         iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
         iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
 
