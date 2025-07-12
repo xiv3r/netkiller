@@ -33,8 +33,8 @@ chmod 755 /bin/netkiller-stop
 for TARGET in $TARGET_IPS; do
    
     # Block all traffic of the target wifi clients
-    iptables -I FORWARD -s "$TARGET" -j DROP
-    iptables -I FORWARD -d "$TARGET" -j DROP
+    iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
+    iptables -I FORWARD -d "$GATEWAY" "$TARGET -j DROP
     iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
    
     # Uncomment to Block all the traffic
