@@ -31,10 +31,10 @@ echo ""
 # Prompt configuration
 echo "Your Arpspoof Configurations..."
 echo ""
-echo "|INTERFACE: | $INTERFACE"
-echo "|GATEWAY:   | $GATEWAY"
-echo "|MYIP:      | $MYIP"
-echo "|TARGETS:   | $TARGET_IPS"
+echo "INTERFACE: | $INTERFACE"
+echo "GATEWAY:   | $GATEWAY"
+echo "MYIP:      | $MYIP"
+echo "TARGETS:   | $TARGET_IPS"
 
 # Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
