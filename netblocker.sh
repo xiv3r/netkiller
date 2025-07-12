@@ -38,5 +38,13 @@ for IP in $(get_all_ips); do
     fi
 done
 
-echo "Blocking all clients on $INTERFACE except $MYIP."
-echo "To stop run: iptables -F FORWARD"
+echo "Blocking all wifi clients internet on $INTERFACE except your IP $MYIP."
+echo "To stop, run: netkiller-stop"
+
+# Clean the rules
+cat > /bin/netkiller-stop << EOF
+iptables -F
+iptables -F FORWARD
+killall arpspoof
+EOF
+chmod 755 /bin/netkiller-stop
