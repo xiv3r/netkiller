@@ -12,14 +12,11 @@ echo "Enter Router Gateway IP: Enter by default"
 read -p "> $GW" INET
 GATEWAY="${INET:-$GW}"
 
-# CIDR
-NETWORK_CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-
-# detect mask
-MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-echo "Enter multiple target: $MASK"
-read -p "> " IPS
-TARGET_IPS="${IPS:-$MASK}"
+# Detect CIDR
+CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+echo "Enter multiple target: Enter by default"
+read -p "> $CIDR" SUB
+NETWORK_CIDR="${SUB:-$CIDR}"
 
 # Detect Device IP
 echo "Enter Device IP: Enter by default"
@@ -34,7 +31,7 @@ echo ""
 echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
 echo "MYIP:      | $MYIP"
-echo "TARGETS:   | $TARGET_IPS"
+echo "TARGETS:   | $NETWORK_CIDR"
 
 # Calculate subnet with ipcalc
 HOSTMIN=$(ipcalc "$NETWORK_CIDR" | grep HostMin | awk '{print $2}')
