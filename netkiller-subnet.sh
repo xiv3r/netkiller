@@ -19,6 +19,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -F
 iptables -X
 iptables -t nat -F
+iptables -F FORWARD
 
 # Create stop script
 cat > /bin/netkiller-stop << EOF
@@ -27,8 +28,9 @@ cat > /bin/netkiller-stop << EOF
 iptables -F
 iptables -X
 iptables -t nat -F
+iptables -F FORWARD
 pkill arpspoof
-echo "Network traffic restored"
+echo "Restoring the connection..."
 EOF
 chmod 755 /bin/netkiller-stop
 
@@ -68,4 +70,4 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
 fi
 
 echo "Attack is running against all possible hosts in $TARGET_SUBNET"
-echo "Type: netkiller-stop to restore wifi clients network connections"
+echo "To stop, Type: netkiller-stop"
