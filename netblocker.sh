@@ -1,9 +1,40 @@
 #!/bin/bash
 
-INTERFACE="wlan0"
-GATEWAY=$(ip route | grep default | awk '{print $3}')
-MYIP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+echo "Enter Wireless Interface: Enter by default"
+read -p "> $WLAN " WLN
+INTERFACE="${WLN:-$WLAN}"
+
+# Detect Gateway IP
+GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
+echo "Enter Router Gateway IP: Enter by default"
+read -p "> $GW" INET
+GATEWAY="${INET:-$GW}"
+
+# CIDR
 NETWORK_CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+
+# detect mask
+MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+echo "Enter multiple target: $MASK"
+read -p "> " IPS
+TARGET_IPS="${IPS:-$MASK}"
+
+# Detect Device IP
+echo "Enter Device IP: Enter by default"
+IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+read -p "> $IP" DEVIP
+MYIP="${DEVIP:-$IP}"
+
+echo ""
+# Prompt configuration
+echo "Your Arpspoof Configurations..."
+echo ""
+echo "INTERFACE: | $INTERFACE"
+echo "GATEWAY:   | $GATEWAY"
+echo "MYIP:      | $MYIP"
+echo "TARGETS:   | $TARGET_IPS"
 
 # Calculate subnet with ipcalc
 HOSTMIN=$(ipcalc "$NETWORK_CIDR" | grep HostMin | awk '{print $2}')
