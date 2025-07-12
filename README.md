@@ -15,7 +15,8 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 - `multiple targets`
 - `all subnet tragets`
 - `block internet traffic`
-- `intercept traffic`
+- `intercept and drop traffic`
+- `mitm device exemption`
 - `dhcp starvation`
 - `arp spoofing`
 
