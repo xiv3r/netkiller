@@ -16,7 +16,7 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 - `all subnet targets`
 - `block internet traffic`
 - `intercept and drop traffic`
-- `mitm device exemption`
+- `block all device with multiple exemption`
 - `dhcp starvation`
 - `arp spoofing`
 
@@ -46,7 +46,7 @@ chmod +x *.sh
 
 # Run
 ```
-sudo bash netkiller-full.sh
+sudo bash netkiller-multi.sh
 ```
 
 # Usage
