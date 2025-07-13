@@ -32,3 +32,9 @@ iptables -F FORWARD
 iptables -I FORWARD -i wlan0 -j DROP
 iptables -I FORWARD -o wlan0 -j DROP
 ```
+
+# Stop
+```
+iptables -F FORWARD
+pkill scapy
+```
