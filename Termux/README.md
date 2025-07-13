@@ -8,6 +8,7 @@
 ```
 pkg update && pkg install git python python3 -y && pip install scapy
 ```
+
 # Functions
 ` Allow to spoof all the host in the subnet`
 
@@ -21,10 +22,17 @@ cd netkiller/Termux
 ```
 chmod +x mitm.py
 ```
+
+# IP Forwarding
+```
+echo 1 > /proc/sys/net/ipv4/ip_forward
+```
+
 # Run
 ```
 ./mitm.py
 ```
+
 # Attacks
 Block all the traffic using iptables
 ```
