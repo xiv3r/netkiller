@@ -59,7 +59,7 @@ echo " "
 echo "Select target type:"
 echo "1) Single target IP"
 echo "2) Multiple target IPs (comma separated)"
-echo "3) Target all (subnet mask)"
+echo "3) Target all IP's (subnet mask)"
 echo ""
 read -p "Enter choice [1-3]: " target_type
 echo ""
