@@ -21,41 +21,34 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Check if ipcalc is installed
-if ! command -v ipcalc &> /dev/null; then
-    echo "ipcalc is not installed. Please install it (apt install ipcalc or yum install ipcalc)"
-    exit 1
-fi
 
-# Get network interface
-INTERFACE=$(ip route | grep '^default' | awk '{print $5}' | head -n1)
-if [ -z "$INTERFACE" ]; then
-    echo "Could not determine network interface. Please specify manually."
-    exit 1
-fi
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+echo "Enter Wireless Interface: Enter by default"
+read -p "> $WLAN " WLN
+INTERFACE="${WLN:-$WLAN}"
+echo ""
 
-# Get gateway IP
-GATEWAY=$(ip route | grep '^default' | awk '{print $3}' | head -n1)
-if [ -z "$GATEWAY" ]; then
-    echo "Could not determine gateway IP. Please specify manually."
-    exit 1
-fi
+# Detect Gateway IP
+GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
+echo "Enter Router Gateway IP: Enter by default"
+read -p "> $GW" INET
+GATEWAY="${INET:-$GW}"
+echo ""
 
-# Get Subnet
+# Detect CIDR
 CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-if [ -z "$CIDR" ]; then
-    echo "Could not determine Subnet IP. Please specify manually."
-    exit 1
-fi
+echo "Enter Subnet Mask: Enter by default"
+read -p "> $CIDR" SUB
+NETWORK_CIDR="${SUB:-$CIDR}"
+echo ""
 
-# Get local IP
-MYIP=$(ip addr show $INTERFACE | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
-if [ -z "$MYIP" ]; then
-    echo "Could not determine Device IP. Please specify manually."
-    exit 1
-fi
-
+# Detect Device IP
+echo "Enter Device IP: Enter by default"
+IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+read -p "> $IP" DEVIP
+MYIP="${DEVIP:-$IP}"
 echo " "
+
 echo "Network Interface: $INTERFACE"
 echo "Gateway IP: $GATEWAY"
 echo "Subnet IP: $CIDR"
@@ -64,9 +57,9 @@ echo " "
 
 # Target selection
 echo "Select target type:"
-echo "1) Single IP"
-echo "2) Multiple IPs (comma separated)"
-echo "3) Subnet (CIDR notation)"
+echo "1) Single target IP"
+echo "2) Multiple target IPs (comma separated)"
+echo "3) Target all (subnet mask)"
 echo ""
 read -p "Enter choice [1-3]: " target_type
 echo ""
