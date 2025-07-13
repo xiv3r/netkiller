@@ -8,7 +8,7 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 # Requirements
 - Debian/Kali/Ubuntu/Parrot
 - [Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
-- Openstick | Wireless | LAN | Built-in Wifi Adapter
+- External or Built-in WiFi Adapter
 
 # Features
 - `single target`
