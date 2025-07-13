@@ -13,7 +13,7 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 # Features
 - `single target`
 - `multiple targets`
-- `all subnet tragets`
+- `all subnet targets`
 - `block internet traffic`
 - `intercept and drop traffic`
 - `mitm device exemption`
