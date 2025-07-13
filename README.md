@@ -37,11 +37,7 @@ chmod +x *.sh
 
 # Auto install
 ```
-sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sh && cd netkiller
-
-```
-```
-chmod +x *.sh
+sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && cd netkiller && chmod 755 *.sh
 ```
 
 # Run
