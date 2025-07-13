@@ -31,11 +31,16 @@ sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcal
 ```
 git clone https://github.com/xiv3r/netkiller.git
 cd netkiller
-chmod +x *.sh
+sudo chmod +x *.sh
 ```
 </details>
 
 # Auto install
+
+<details><summary></summary>
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/install.png">
+</details>
+
 ```
 sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && cd netkiller && sudo chmod 755 *.sh
 ```
