@@ -1,8 +1,5 @@
-# About netkiller
-netkiller - is a tool that blocks the wifi clients internet connection remotely without disconnecting them from the wifi AP.
-
 <div align="center">
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/gui.png">
 </div>
 
 # Requirements
@@ -78,6 +75,12 @@ sudo bash netkiller-multi.sh
 ```
 sudo netkiller-stop
 ```
+# About netkiller
+netkiller - is a tool that blocks the wifi clients internet connection remotely without disconnecting them from the wifi AP.
+
+<div align="center">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
+</div>
 
 # ⚠️ DISCLAIMER
 
