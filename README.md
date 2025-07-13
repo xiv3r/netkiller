@@ -75,7 +75,7 @@ sudo bash netkiller-full.sh
 # Restore
 > Restore the target wifi clients internet connection remotely.
 ```
-netkiller-stop
+sudo netkiller-stop
 ```
 
 # ⚠️ DISCLAIMER
