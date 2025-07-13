@@ -1,5 +1,5 @@
 # About 
-redirect the dns request to your server works likely similar to a captive portal dns spoofing.
+redirect the target ip dns request to your device works similar to a captive portal dns spoofing.
 
 # Features 
 - single target
