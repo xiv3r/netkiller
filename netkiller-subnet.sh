@@ -23,7 +23,7 @@ echo "TARGET:    | $MASK"
 echo ""
 
 # Detect Interface
-echo "Enter Wireless Interface: Enter by default"
+echo "Enter Wireless Interface: Skip for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo ""
