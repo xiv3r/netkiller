@@ -16,7 +16,7 @@ IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 
 echo "INTERFACE: | $WLAN"
 echo "GATEWAY:   | $GW"
-echo "MYIP:      | $IP"
+echo "YOUR IP:   | $IP"
 echo "TARGETS:   | $MASK"
 echo ""
 
@@ -28,19 +28,19 @@ echo ""
 
 # Detect Gateway IP
 echo "Enter Router Gateway IP: Skip for default"
-read -p "> $GW" INET
+read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Subnet
-echo "Enter Subnet mask: Skip for default"
-read -p "> $MASK" IPS
+echo "Enter Subnet Mask: Skip for default"
+read -p "> $MASK " IPS
 TARGET_IPS="${IPS:-$MASK}"
 echo ""
 
 # Detect Device IP
 echo "Enter Device IP: Skip for default"
-read -p "> $IP" DEVIP
+read -p "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
 echo ""
 
@@ -49,7 +49,7 @@ echo "Your Arpspoof Configurations..."
 echo ""
 echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
-echo "MYIP:      | $MYIP"
+echo "DEVICE IP: | $MYIP"
 echo "TARGETS:   | $TARGET_IPS"
 echo ""
 
