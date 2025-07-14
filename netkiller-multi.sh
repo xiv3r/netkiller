@@ -39,7 +39,7 @@ echo "Current Network Configurations"
 echo "[*] Network Interface: $WLAN"
 echo "[*] Gateway IP: $GW"
 echo "[*] Subnet IP: $CIDR"
-echo "[*] Your IP: $IP"
+echo "[*] Device IP: $IP"
 echo ""
 
 read -p "Enter Wireless Interface: " INTERFACE
@@ -57,7 +57,7 @@ echo "Your Network Configuration"
 echo "[*] Network Interface: $INTERFACE"
 echo "[*] Gateway IP: $GATEWAY"
 echo "[*] Subnet IP: $NETWORK_CIDR"
-echo "[*] Your IP: $MYIP"
+echo "[*] Device IP: $MYIP"
 echo ""
 
 # Target selection
