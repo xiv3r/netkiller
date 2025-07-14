@@ -15,6 +15,7 @@ MASK=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 echo ""
 echo "Current Network Configuration"
+echo ""
 echo "INTERFACE: | $WLAN"
 echo "GATEWAY:   | $GW"
 echo "DEVICE IP: | $IP"
