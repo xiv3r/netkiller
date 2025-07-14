@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if script is running as root
+if [[ $EUID -ne 0 ]]; then
+    exec sudo "$0" "$@"
+fi
+
+# Rest of your script...
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 echo "Enter Wireless Interface: Skip for default"
 read -p "> $WLAN " WLN
