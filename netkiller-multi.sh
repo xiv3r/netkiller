@@ -40,7 +40,7 @@ echo "Current Network Configurations"
 echo "[*] Network Interface: $WLAN"
 echo "[*] Gateway IP: $GW"
 echo "[*] Subnet IP: $CIDR"
-echo "[*] Your IP: $IP"
+echo "[*] Your IP: $MYIP"
 echo " "
 
 
