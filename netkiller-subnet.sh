@@ -49,6 +49,7 @@ echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
 echo "DEVICE IP: | $MYIP"
 echo "TARGETS:   | $TARGET_SUBNET"
+echo ""
 
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
