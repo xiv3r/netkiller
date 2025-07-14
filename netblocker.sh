@@ -7,15 +7,15 @@ fi
 
 # Detect network configuration
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
-CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
+CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
+IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 
 echo "Current Network Configuration"
-echo "INTERFACE: | $INTERFACE"
-echo "GATEWAY:   | $GATEWAY"
+echo "INTERFACE: | $WLAN"
+echo "GATEWAY:   | $GW"
 echo "Device IP: | $IP"
-echo "TARGETS:   | $NETWORK_CIDR"
+echo "TARGETS:   | $CIDR"
 echo ""
 
 # Detect interface 
