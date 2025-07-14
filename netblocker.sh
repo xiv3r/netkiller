@@ -1,28 +1,25 @@
 #!/bin/bash
 
-
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-echo "Enter Wireless Interface: Enter by default"
+echo "Enter Wireless Interface: Skip for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 
 # Detect Gateway IP
 GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
-echo "Enter Router Gateway IP: Enter by default"
-read -p "> $GW" INET
+echo "Enter Router Gateway IP: Skip for default"
+read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 
 # Detect CIDR
 CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-echo "Enter multiple target: Enter by default"
-read -p "> $CIDR" SUB
+echo "Enter multiple target: Skip for default"
+read -p "> $CIDR " SUB
 NETWORK_CIDR="${SUB:-$CIDR}"
 
 # Detect Device IP
-echo "Enter Device IP: Enter by default"
 IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-read -p "> $IP" DEVIP
-MYIP="${DEVIP:-$IP}"
+MYIP="$IP"
 
 echo ""
 # Prompt configuration
@@ -32,6 +29,7 @@ echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
 echo "MYIP:      | $MYIP"
 echo "TARGETS:   | $NETWORK_CIDR"
+echo ""
 
 # Calculate subnet with ipcalc
 HOSTMIN=$(ipcalc "$NETWORK_CIDR" | grep HostMin | awk '{print $2}')
