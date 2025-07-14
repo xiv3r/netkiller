@@ -3,6 +3,13 @@
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Requires: arpspoof, iptables, and root privileges
 
+# Check if script is running as root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root" 
+    echo "Please re-run using: sudo $0 $*"
+    exit 1
+fi
+
 # Detect Current Network Configuration 
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
