@@ -48,11 +48,6 @@ sudo bash netkiller-multi.sh
 ```
 
 # Usage
-- `Single Target` - 192.168.1.100
-- `Multiple Targets` - 192.168.1.100 192.168.1.105 192.168.1.110 (Space-Separated)
-- `All Targets` - 192.168.1.1/24 or 10.0.0.1/20
-
-# Example 
 
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/cmd.png.jpg">
