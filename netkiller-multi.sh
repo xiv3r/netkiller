@@ -8,7 +8,7 @@ echo "
        ██║╚██╗██║██╔══╝     ██║   ██╔═██╗ ██║██║     ██║     ██╔══╝  ██╔══██╗
        ██║ ╚████║███████╗   ██║   ██║  ██╗██║███████╗███████╗███████╗██║  ██║
        ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
-                              remote wifi killer
+                                        wifi kill
 "
 
 echo -e "\e[1;92mAuthor:[x!v3r] github.com/xiv3r \e[0m"
@@ -20,7 +20,6 @@ if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root" >&2
     exit 1
 fi
-
 
 echo ""
 # Detect interface
@@ -41,8 +40,7 @@ echo "[*] Network Interface: $WLAN"
 echo "[*] Gateway IP: $GW"
 echo "[*] Subnet IP: $CIDR"
 echo "[*] Your IP: $IP"
-echo " "
-
+echo ""
 
 read -p "Enter Wireless Interface: " INTERFACE
 echo ""
@@ -53,21 +51,21 @@ echo ""
 read -p "Enter Subnet Mask: " NETWORK_CIDR
 echo ""
 
-MYIP=$IP
-echo " "
+MYIP="$IP"
 
 echo "Your Network Configuration"
 echo "[*] Network Interface: $INTERFACE"
 echo "[*] Gateway IP: $GATEWAY"
 echo "[*] Subnet IP: $NETWORK_CIDR"
 echo "[*] Your IP: $MYIP"
-echo " "
+echo ""
 
 # Target selection
 echo "Select Attack Type:"
 echo "1) Single Target IP"
 echo "2) Multiple Target IP's (comma separated)"
 echo "3) Target All IP's in Subnet"
+
 echo ""
 read -p "Enter choice [1-3]: " target_type
 echo ""
