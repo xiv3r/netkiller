@@ -22,6 +22,7 @@ echo "INTERFACE: | $WLAN"
 echo "GATEWAY:   | $GW"
 echo "DEVICE IP: | $IP"
 echo "TARGETS:   | $MASK"
+echo ""
 
 # Detect Interface
 echo "Enter Wireless Interface: Enter for default"
