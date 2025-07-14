@@ -22,34 +22,41 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 
+echo ""
+# Detect interface
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-echo "Enter Wireless Interface: Enter by default"
-read -p "> $WLAN " WLN
-INTERFACE="${WLN:-$WLAN}"
-echo ""
 
-# Detect Gateway IP
-GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
-echo "Enter Router Gateway IP: Enter by default"
-read -p "> $GW " INET
-GATEWAY="${INET:-$GW}"
-echo ""
+# Detect gateway
+GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 
-# Detect CIDR
-CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
-echo "Enter Subnet Mask: Enter by default"
-read -p "> $CIDR " SUB
-NETWORK_CIDR="${SUB:-$CIDR}"
-echo ""
+# Detect subnet
+CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 
-# Detect Device IP
-echo "Enter Device IP: Enter by default"
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-read -p "> $IP " DEVIP
-MYIP="${DEVIP:-$IP}"
-echo " "
+# Detect device IP
+IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+echo ""
 
 echo "Current Network Configurations"
+echo "[*] Network Interface: $WLAN"
+echo "[*] Gateway IP: $GW"
+echo "[*] Subnet IP: $CIDR"
+echo "[*] Your IP: $IP"
+echo " "
+
+
+read -p "Enter Wireless Interface: " INTERFACE
+echo ""
+
+read -p "Enter Router Gateway IP: " GATEWAY
+echo ""
+
+read -p "Enter Subnet Mask: " NETWORK_CIDR
+echo ""
+
+read -p "Enter Device IP: " MYIP
+echo " "
+
+echo "Your Network Configuration"
 echo "[*] Network Interface: $INTERFACE"
 echo "[*] Gateway IP: $GATEWAY"
 echo "[*] Subnet IP: $CIDR"
