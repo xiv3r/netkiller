@@ -14,6 +14,7 @@ GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 MASK=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 
+echo "Current Network Configuration"
 echo "INTERFACE: | $WLAN"
 echo "GATEWAY:   | $GW"
 echo "YOUR IP:   | $IP"
