@@ -5,26 +5,35 @@ if [[ $EUID -ne 0 ]]; then
     exec sudo "$0" "$@"
 fi
 
-# Rest of your script...
+# Detect network configuration
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
+CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
+IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
+
+echo "Current Network Configuration"
+echo "INTERFACE: | $INTERFACE"
+echo "GATEWAY:   | $GATEWAY"
+echo "Device IP: | $IP"
+echo "TARGETS:   | $NETWORK_CIDR"
+echo ""
+
+# Detect interface 
 echo "Enter Wireless Interface: Skip for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 
 # Detect Gateway IP
-GW=$(ip route show dev "$INTERFACE" | awk '/default/ {print $3}')
 echo "Enter Router Gateway IP: Skip for default"
 read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 
 # Detect CIDR
-CIDR=$(ip addr show "$INTERFACE" | grep 'inet ' | awk '{print $2}')
 echo "Enter multiple target: Skip for default"
 read -p "> $CIDR " SUB
 NETWORK_CIDR="${SUB:-$CIDR}"
 
 # Detect Device IP
-IP=$(ip addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
 MYIP="$IP"
 
 echo ""
@@ -33,7 +42,7 @@ echo "Your Arpspoof Configurations..."
 echo ""
 echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
-echo "MYIP:      | $MYIP"
+echo "DEVICE IP: | $MYIP"
 echo "TARGETS:   | $NETWORK_CIDR"
 echo ""
 
