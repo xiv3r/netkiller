@@ -25,23 +25,26 @@ echo ""
 echo "Enter Wireless Interface: Enter by default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
+echo ""
 
 # Detect Gateway IP
 echo "Enter Router Gateway IP: Skip for default"
 read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
+echo ""
 
 # Detect Subnet
 echo "Enter Subnet mask: Skip for default"
 read -p "> $MASK " IPS
 TARGET_SUBNET="${IPS:-$MASK}"
+echo ""
 
 # Detect Device IP
 echo "Enter Device IP: Skip for default"
 read -p "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
-
 echo ""
+
 # Prompt configuration
 echo "Your Arpspoof Configurations..."
 echo ""
