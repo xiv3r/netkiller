@@ -64,28 +64,28 @@ echo "[*] Your IP: $MYIP"
 echo " "
 
 # Target selection
-echo "Select Attack type:"
-echo "1) Single target IP"
-echo "2) Multiple target IP's (comma separated)"
-echo "3) Target all IP's in Subnet"
+echo "Select Attack Type:"
+echo "1) Single Target IP"
+echo "2) Multiple Target IP's (comma separated)"
+echo "3) Target All IP's in Subnet"
 echo ""
 read -p "Enter choice [1-3]: " target_type
 echo ""
 
 case $target_type in
     1)
-        echo "Enter Single target IP: e.g 192.168.1.123"
-        read -p "> " TARGET
+        echo "Single Target User IP: e.g 192.168.1.123"
+        read -p "Enter User IP: " TARGET
         TARGETS=($TARGET)
         ;;
     2)
-        echo "Enter Multiple target IP's: e.g 192.168.1.123,192.168.1.124..."
-        read -p "> " target_input
+        echo "Multiple Target User IP's: e.g 192.168.1.123,192.168.1.124..."
+        read -p "Enter Multiple Users IP's:  " target_input
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
     3)
-        echo "Target all IP's in Subnet: e.g 192.168.1.1/24"
-        read -p "> " subnet
+        echo "Target All Users IP's in Subnet: e.g 192.168.1.1/24"
+        read -p "Enter Subnet: " subnet
 
         # Validate subnet
         if ! ipcalc -n "$subnet" &>/dev/null; then
