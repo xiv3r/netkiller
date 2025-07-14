@@ -29,8 +29,8 @@ read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 
 # Detect CIDR
-echo "Enter multiple target: Skip for default"
-read -p "> $CIDR " SUB
+echo "Enter Multiple Target IP's: e.g 10.0.0.123,10.0.0.124"
+read -p "> " SUB
 NETWORK_CIDR="${SUB:-$CIDR}"
 
 # Detect Device IP
