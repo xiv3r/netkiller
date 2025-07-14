@@ -37,7 +37,7 @@ GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Subnet
-echo "Enter multiple target: e.g 10.0.0.123,10.0.0.124"
+echo "Enter Multiple Target IP's: e.g 10.0.0.123,10.0.0.124"
 read -p "> " IPS
 TARGET_IPS="${IPS:-$MASK}"
 echo ""
