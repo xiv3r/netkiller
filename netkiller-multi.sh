@@ -59,7 +59,7 @@ echo " "
 echo "Your Network Configuration"
 echo "[*] Network Interface: $INTERFACE"
 echo "[*] Gateway IP: $GATEWAY"
-echo "[*] Subnet IP: $CIDR"
+echo "[*] Subnet IP: $NETWORK_CIDR"
 echo "[*] Your IP: $MYIP"
 echo " "
 
