@@ -28,17 +28,17 @@ INTERFACE="${WLN:-$WLAN}"
 
 # Detect Gateway IP
 echo "Enter Router Gateway IP: Skip for default"
-read -p "> $GW" INET
+read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 
 # Detect Subnet
 echo "Enter Subnet mask: Skip for default"
-read -p "> $MASK" IPS
+read -p "> $MASK " IPS
 TARGET_SUBNET="${IPS:-$MASK}"
 
 # Detect Device IP
 echo "Enter Device IP: Skip for default"
-read -p "> $IP" DEVIP
+read -p "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
 
 echo ""
@@ -47,7 +47,7 @@ echo "Your Arpspoof Configurations..."
 echo ""
 echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
-echo "MY IP:     | $MYIP"
+echo "DEVICE IP: | $MYIP"
 echo "TARGETS:   | $TARGET_SUBNET"
 
 # Enable IP forwarding
