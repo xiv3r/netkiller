@@ -33,14 +33,14 @@ GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 
 # Detect device IP
-MYIP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 echo ""
 
 echo "Current Network Configurations"
 echo "[*] Network Interface: $WLAN"
 echo "[*] Gateway IP: $GW"
 echo "[*] Subnet IP: $CIDR"
-echo "[*] Your IP: $MYIP"
+echo "[*] Your IP: $IP"
 echo " "
 
 
@@ -53,7 +53,7 @@ echo ""
 read -p "Enter Subnet Mask: " NETWORK_CIDR
 echo ""
 
-read -p "Enter Device IP: " MYIP
+MYIP=$IP
 echo " "
 
 echo "Your Network Configuration"
