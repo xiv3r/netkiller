@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Install required tools (if not already installed)
-sudo apt-get update
-sudo apt-get install -y dsniff iptables iptables-persistent ipcalc -y
-
 # Prompt user for network interface
 read -p "Enter the network interface (e.g., wlan0): " INTERFACE
 
