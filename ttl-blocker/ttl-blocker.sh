@@ -90,7 +90,7 @@ fi
 for TARGET_IP in "${TARGET_IPS[@]}"; do
     if validate_ip "$TARGET_IP"; then
         if [ "$TARGET_IP" != "$DEVICE_IP" ] && [ "$TARGET_IP" != "$GATEWAY_IP" ]; then
-            echo "Starting ARP spoofing for target: $TARGET_IP"
+            echo "Blocking TTL for target: $TARGET_IP"
             arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY_IP" &
             arpspoof -i "$INTERFACE" -t "$GATEWAY_IP" "$TARGET_IP" &
         else
@@ -109,3 +109,5 @@ pkill -f arpspoof
 iptables -t mangle -F
 EOF
 chmod 755 /bin/ttl-stop
+
+echo "To stop, run: sudo ttl-stop"
