@@ -105,10 +105,9 @@ start_attack() {
 # Cleanup function
 cleanup() {
     echo -e "\n${GREEN}[+] Cleaning up...${NC}"
-    pkill arpspoof
-    pkill dnsspoof
+    pkill -f arpspoof
+    pkill -f dnsspoof
     iptables -t nat -F PREROUTING
-    echo 0 > /proc/sys/net/ipv4/ip_forward
     echo -e "${GREEN}[+] Cleanup complete. Goodbye!${NC}"
     exit 0
 }
