@@ -192,20 +192,21 @@ done
 
 # Function to clean up
 cleanup() {
-    echo -e "\nCleaning up..."
+    echo -e "\nCleaning up ruleset..."
     # Kill all arpspoof processes
     for pid in "${PIDS[@]}"; do
         kill -9 $pid >/dev/null 2>&1
     done
 
     # Flush iptables rules
-    iptables -D FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP 2>/dev/null
-    iptables -D FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP 2>/dev/null
+    iptables -D FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP >/dev/null
+    iptables -D FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP >/dev/null
     for TARGET in "${TARGETS[@]}"; do
-        iptables -D FORWARD -s $TARGET -j DROP 2>/dev/null
-        iptables -D FORWARD -d $TARGET -j DROP 2>/dev/null
+        iptables -D FORWARD -s $TARGET -j DROP >/dev/null
+        iptables -D FORWARD -d $TARGET -j DROP >/dev/null
     done
-    echo "Done. iptables rules removed and processes stopped."
+    echo ""
+    echo "Restoring the wifi clients connection..."
 }
 
 # Trap Ctrl+C
