@@ -1,8 +1,8 @@
 # ⚠️ Block wifi user using iptables ttl blocker
 
 ## Features:
-- Single target IP
-- Multiple target IP's
+- Single Target IP
+- Multiple Target IP's
 - All IP's in Subnet
 
 # Depends
@@ -33,3 +33,9 @@ wget https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/ttl-block
 ```
 sudo ttl-stop
 ```
+
+# How it works 
+- `----------------Bidirectional------------------------`
+- `Wifi AP  ->  MITM (arp spoofing) -> Wifi clients` 
+- `10.0.0.1 ->                      -> Unreachable`
+- `TTL=1|64 -> iptables --ttl-set 0 -> Dead connection for Wifi clients`
