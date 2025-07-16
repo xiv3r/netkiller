@@ -39,7 +39,7 @@ sudo chmod +x *.sh
 </details>
 
 ```
-sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && cd netkiller && sudo chmod 755 *.sh
+sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && sudo chmod 755 ~/netkiller/*.sh && cd netkiller
 ```
 
 # Run
