@@ -1,5 +1,10 @@
 # ⚠️ Block wifi user using iptables ttl blocker
 
+## Features:
+- Single target IP
+- Multiple target IP's
+- All IP's in Subnet
+- 
 # Depends
 ```
 sudo apt update && sudo apt install wget dsniff iptables ipcalc -y
