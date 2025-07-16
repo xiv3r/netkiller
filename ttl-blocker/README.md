@@ -18,7 +18,7 @@ wget https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/ttl-block
 # Usage
 <div align="center">
 
-<img src="">
+<img src="https://github.com/xiv3r/netkiller/blob/main/ttl-blocker/ttl.png">
 </div>
 
 # Stop
