@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Install required tools
-apt-get install dsniff iptables ipcalc -y
-
 # Prompt user for input
 echo "Enter target IP(s) (single IP, multiple IPs separated by commas, or subnet with mask, e.g., 192.168.1.0/24):"
 read -p "> " target_input
