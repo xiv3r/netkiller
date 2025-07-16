@@ -4,7 +4,7 @@
 - Single target IP
 - Multiple target IP's
 - All IP's in Subnet
-- 
+
 # Depends
 ```
 sudo apt update && sudo apt install wget dsniff iptables ipcalc -y
@@ -14,4 +14,14 @@ sudo apt update && sudo apt install wget dsniff iptables ipcalc -y
 ```
 wget https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/ttl-blocker/ttl-blocker.sh -O ttl-blocker.sh && chmod 755 ttl-blocker.sh && ./ttl-blocker.sh
 ```
+
 # Usage
+<div align="center">
+
+<img src="">
+</div>
+
+# Stop
+```
+sudo ttl-stop
+```
