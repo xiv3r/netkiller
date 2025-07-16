@@ -20,6 +20,12 @@ wget https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/ttl-block
 
 <img src="https://github.com/xiv3r/netkiller/blob/main/ttl-blocker/ttl.png">
 </div>
+`Interface`: wlan0 - wifi interface
+`Device IP`: 10.0.0.125 - Your Device DHCP IP (exemption for blocking)
+`Gateway`: 10.0.0.1 - Target Gateway
+`Target IP`: 10.0.0.150 - Target a single wifi user
+`Multiple Target IP`: 10.0.0.160 10.0.0.170 10.0.0.180 - Target multiple wifi users
+`Subnet`: 10.0.0.1/20 - Target all except your Device IP in the subnet
 
 # Stop
 ```
