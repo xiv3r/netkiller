@@ -6,7 +6,7 @@
 
 # Dependencies
 ```
-pkg update && pkg install git python python3 -y && pip install scapy
+pkg update && pkg install git python -y && pip install scapy
 ```
 
 # Functions
