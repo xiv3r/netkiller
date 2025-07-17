@@ -1,4 +1,5 @@
-# ⚠️ Cut wifi users internet connection remotely using iptables ttl limiter
+# ttl blocker 
+the ttl blocker can cut wifi users internet connection remotely using iptables ttl limit.
 
 # Features:
 - Single Target IP
