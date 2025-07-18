@@ -39,7 +39,7 @@ sudo chmod +x *.sh
 </details>
 
 ```
-sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && sudo chmod 755 ~/netkiller/*.sh && cd netkiller
+sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && sudo chmod 755 netkiller/*.sh && cd netkiller && ls
 ```
 
 # Run
@@ -65,8 +65,8 @@ sudo bash netkiller-multi.sh
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/dhcpstarvation.png">
 </details></div>
 
-# Restore
-> Restore the target wifi clients internet connection remotely.
+# Abort
+> Remotely restore the target wifi client internet connection.
 ```
 sudo netkiller-stop
 ```
@@ -77,7 +77,7 @@ netkiller - is a tool that blocks the wifi clients internet connection remotely 
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
 </div>
 
-# ⚠️ DISCLAIMER
+## ⚠️ DISCLAIMER
 
 `The Netkiller tool is intended solely for authorized testing, educational purposes, and network security auditing. Unauthorized use of this software against systems you do not own or have explicit permission to test is strictly prohibited and may be punishable by law.`
 
