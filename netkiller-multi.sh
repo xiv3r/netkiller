@@ -200,7 +200,7 @@ cleanup() {
 
     # Flush iptables rules
     iptables -D FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP >/dev/null
-    iptables -D FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP >/dev/null
+    iptables -D FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP >/dev/null
     for TARGET in "${TARGETS[@]}"; do
         iptables -D FORWARD -s $TARGET -j DROP >/dev/null
         iptables -D FORWARD -d $TARGET -j DROP >/dev/null
