@@ -53,15 +53,15 @@ echo ""
 
 MYIP="$IP"
 
-echo "Your Network Configuration"
-echo "[*] Network Interface: $INTERFACE"
-echo "[*] Gateway IP: $GATEWAY"
-echo "[*] Subnet IP: $NETWORK_CIDR"
-echo "[*] Device IP: $MYIP"
+echo "Target Network Configuration"
+echo "[*] Target Network Interface: $INTERFACE"
+echo "[*] Target Gateway IP: $GATEWAY"
+echo "[*] Target Subnet IP: $NETWORK_CIDR"
+echo "[*] This Device IP: $MYIP"
 echo ""
 
 # Target selection
-echo "Select Attack Type:"
+echo "Select Attack Type!"
 echo "1) Single Target IP"
 echo "2) Multiple Target IP's (comma separated)"
 echo "3) Target All IP's in Subnet"
