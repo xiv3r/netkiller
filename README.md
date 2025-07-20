@@ -3,8 +3,7 @@
 </div>
 
 # Requirements
-- Debian/Kali/Ubuntu/Parrot
-- [Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
+- Debian/Kali/Ubuntu/Parrot/[Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
 - External or Built-in WiFi Adapter
 
 # Features
@@ -40,6 +39,9 @@ sudo chmod +x *.sh
 ```
 sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && sudo chmod 755 netkiller/*.sh && cd netkiller && ls
 ```
+<details><summary>Kali Termux (root)</summary>
+ <img src="https://github.com/xiv3r/netkiller/blob/main/image/kali-termux.png">
+</details>
 
 # Scanning the target
 <details>
