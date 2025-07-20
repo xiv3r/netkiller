@@ -32,4 +32,4 @@ if [ -z "$interface" ] || [ -z "$subnet" ]; then
 fi
 
 # Run arp-scan with provided inputs
-arp-scan -I"$interface" -L --retry=3 --bandwidth=100000 --"$subnet"
+arp-scan --localnet --retry=5 --bandwidth=100000 --interface="$interface" "$subnet"
