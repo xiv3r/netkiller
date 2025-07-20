@@ -185,7 +185,7 @@ for TARGET in "${TARGETS[@]}"; do
 
     # Set iptables rules to block/drop traffic
     iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-    iptables -I FORWARD ! -d "$GATEWAY" -s "$MYIP" -j DROP
+    iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
     iptables -I FORWARD -s $TARGET -j DROP
     iptables -I FORWARD -d $TARGET -j DROP
 done
