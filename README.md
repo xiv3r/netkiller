@@ -43,8 +43,19 @@ sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubuserc
 ```
 
 # Run
+- Scanning the target
+```
+sudo bash scan.sh
+```
+- Attack the target
 ```
 sudo bash netkiller-multi.sh
+```
+
+# Update
+```
+git fetch --all
+git reset --hard origin/main
 ```
 
 # Usage
