@@ -22,7 +22,7 @@ echo "Enter network interface (e.g., wlan0)"
 read -p "> " interface
 
 # Prompt user for subnet (e.g., 10.0.0.1/20)
-echo "Enter subnet (e.g., 10.0.0.1/20)"
+echo "Enter subnet (e.g., 10.0.0.0/20)"
 read -p "> " subnet
 
 # Validate inputs are not empty
