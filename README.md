@@ -33,8 +33,7 @@ sudo chmod +x *.sh
 </details>
 
 # Auto install
-
-<details><summary></summary>
+<details><summary>Install logs</summary>
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/install.png">
 </details>
 
@@ -42,17 +41,15 @@ sudo chmod +x *.sh
 sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && sudo chmod 755 netkiller/*.sh && cd netkiller && ls
 ```
 
-# Usage
-<details><summary>Scanning the target
-</summary>
-  
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/scan.png">
+# Scanning the target
+<details>
+ <img src="https://github.com/xiv3r/netkiller/blob/main/image/scan.png">
 </details>
 
 ```
 sudo bash scan.sh
 ```
-- Attack the target
+# Attack the target
 ```
 sudo bash netkiller-multi.sh
 ```
