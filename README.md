@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/gui.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/netkill.png">
 </div>
 
 # Requirements
@@ -21,7 +21,7 @@
 
 # Dependencies
 ```
-sudo apt update && sudo apt upgrade -y && sudo apt install iptables dsniff ipcalc -y
+sudo apt update && sudo apt upgrade -y && sudo apt install arp-scan iptables dsniff ipcalc -y
 ```
 
 # Git clone
@@ -42,8 +42,13 @@ sudo chmod +x *.sh
 sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubusercontent.com/xiv3r/netkiller/refs/heads/main/install.sh | sudo sh && sudo chmod 755 netkiller/*.sh && cd netkiller && ls
 ```
 
-# Run
-- Scanning the target
+# Usage
+<details><summary>Scanning the target
+</summary>
+  
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/scan.png">
+</details>
+
 ```
 sudo bash scan.sh
 ```
@@ -54,15 +59,12 @@ sudo bash netkiller-multi.sh
 
 # Update
 ```
+cd netkiller
+```
+```
 git fetch --all
 git reset --hard origin/main
 ```
-
-# Usage
-
-<div align="center">
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/cmd.png.jpg">
-</div>
 
 # Result
 > Impact of the remote attack on the target wifi clients connection.
