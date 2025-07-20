@@ -125,4 +125,5 @@ fi
 
 echo "Netkiller kill the target: $NETWORK_CIDR"
 echo ""
+echo "Netkiller is running in the Background..."
 echo "To stop, run: sudo netkiller-stop"
