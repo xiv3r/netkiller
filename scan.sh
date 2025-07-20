@@ -21,15 +21,11 @@ fi
 echo "Enter network interface (e.g., wlan0)"
 read -p "> " interface
 
-# Prompt user for subnet (e.g., 10.0.0.1/20)
-echo "Enter subnet (e.g., 10.0.0.0/20)"
-read -p "> " subnet
-
 # Validate inputs are not empty
-if [ -z "$interface" ] || [ -z "$subnet" ]; then
+if [ -z "$interface" ]; then
   echo "Error: Interface and subnet cannot be empty."
   exit 1
 fi
 
 # Run arp-scan with provided inputs
-arp-scan --localnet --retry=5 --bandwidth=100000 --interface="$interface" "$subnet"
+arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$interface"
