@@ -96,7 +96,7 @@ iptables -t nat -F
 iptables -t nat -X
 iptables -P FORWARD ACCEPT
 iptables -I FORWARD -j ACCEPT
-iptables -t nat -A POSTROUTING -j MASQUERADE
+iptables -t nat -A POSTROUTING -o "$INTERFACE" -j MASQUERADE
 
 # Array to store PIDs of arpspoof processes
 ARP_PIDS=()
