@@ -24,7 +24,7 @@ fi
 echo "Device IP on $INTERFACE: $DEVICE_IP"
 
 # Prompt for target IPs or subnet
-read -p "Enter Multiple Target IP(s) (e.g., 10.0.0.1 10.0.0.2 10.0.0.3) or Subnet (e.g., 192.168.1.0/24) " TARGET_INPUT
+read -p "Enter Multiple Target IP(s) (e.g., 10.0.0.1 10.0.0.2 10.0.0.3) or Subnet (e.g., 192.168.1.0/24): " TARGET_INPUT
 if [[ -z "$TARGET_INPUT" ]]; then
     echo "No target IPs or subnet provided. Exiting."
     exit 1
