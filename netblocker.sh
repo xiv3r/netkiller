@@ -38,8 +38,7 @@ MYIP="$IP"
 
 echo ""
 # Prompt configuration
-echo "Your Target Configurations..."
-echo ""
+echo "Target Network Configurations..."
 echo "Target Interface: | $INTERFACE"
 echo "Target Gateway:   | $GATEWAY"
 echo "Target Subnet:    | $NETWORK_CIDR"
@@ -123,7 +122,7 @@ else
     done
 fi
 
-echo "Netkiller kill the target: $NETWORK_CIDR"
+echo "Netkiller killing the target IP: $NETWORK_CIDR"
 echo ""
 echo "Netkiller is running in the Background..."
 echo "To stop, run: sudo netkiller-stop"
