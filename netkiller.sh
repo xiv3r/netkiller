@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# Made by Xiv3r v1.
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
-# Requires: arpspoof, iptables, ipcalc, and root privileges
+# Requires: dsniff, iptables, ipcalc, and root privileges
 
 # Check if script is running as root
 if [[ $EUID -ne 0 ]]; then
@@ -10,32 +11,35 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-# Check if ipcalc is installed
-if ! command -v ipcalc &> /dev/null; then
-    echo "ipcalc is required but not installed. Please install it (e.g., 'sudo apt install ipcalc' on Debian/Ubuntu)."
-    exit 1
-fi
+# Check for required tools
+REQUIRED_TOOLS=("dsniff" "iptables" "ipcalc")
+
+for tool in "${REQUIRED_TOOLS[@]}"; do
+    if ! command -v "$tool" &> /dev/null; then
+        echo "$tool is required but not installed. Please install it."
+        exit 1
+    fi
+done
 
 # Detect Current Network Configuration
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 echo ""
-echo "Current Network Configuration"
-echo ""
+echo "Current Network Information"
 echo "INTERFACE: | $WLAN"
 echo "GATEWAY:   | $GW"
 echo "DEVICE IP: | $IP"
 echo ""
 
 # Detect Interface
-echo "Enter Wireless Interface: Skip for default"
+echo "Enter Wireless Interface: Enter for default"
 read -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo ""
 
 # Detect Gateway IP
-echo "Enter Router Gateway IP: Skip for default"
+echo "Enter Router Gateway IP: Enter for default"
 read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
@@ -56,8 +60,7 @@ echo ""
 MYIP="$IP"
 
 # Prompt configuration
-echo "Your Target Configuration..."
-echo ""
+echo "Target Network Configuration"
 echo "INTERFACE: | $INTERFACE"
 echo "GATEWAY:   | $GATEWAY"
 echo "DEVICE IP: | $MYIP"
@@ -156,6 +159,6 @@ for TARGET in $TARGET_IPS; do
 done
 
 echo ""
-echo "Netkiller Attack is running in the background...!!!"
+echo "Netkiller attack is running in the background...!!!"
 echo "To stop, run: sudo netkiller-stop"
 echo " "
