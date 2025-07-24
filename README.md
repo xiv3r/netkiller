@@ -13,14 +13,15 @@
 <br>
 
 # Features
-- `single target`
-- `multiple targets`
-- `all subnet targets`
-- `block internet traffic`
-- `intercept and drop traffic`
-- `block all device with multiple exemption`
-- `dhcp starvation`
-- `arp spoofing`
+- ▶️`single target`
+- 🔀`multiple targets`
+- 🔁`all subnet targets`
+- 📵`block internet traffic`
+- 🚫`intercept and drop traffic`
+- ❗`block all device with multiple exemption`
+- ☢️`dhcp starvation`
+- ☣️`arp spoofing`
+- 💪`accuracy rate 95%`
 
 <details><summary></summary>
 <br>
@@ -35,6 +36,10 @@ sudo apt update && sudo apt upgrade -y && sudo apt install arp-scan iptables dsn
 git clone https://github.com/xiv3r/netkiller.git
 cd netkiller
 sudo chmod +x *.sh
+```
+# Run
+```
+sudo ./netkiller-multi.sh
 ```
 </details>
 <br>
