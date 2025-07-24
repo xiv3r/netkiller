@@ -74,6 +74,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 cat > /bin/netkiller-stop << EOF
 #!/bin/sh
 
+sudo ip -s -s neigh flush all
 iptables -t nat -F
 iptables -F FORWARD
 pkill -f arpspoof
