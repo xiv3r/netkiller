@@ -80,6 +80,14 @@ sudo bash netkiller-multi.sh
 ```
 <br>
 
+# Show ARP/IP Tables
+```
+sudo arp -e | grep wlan0
+```
+```
+sudo iptables -L -v -n
+```
+
 # Update
 ```
 cd netkiller
