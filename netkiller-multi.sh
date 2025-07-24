@@ -35,7 +35,7 @@ CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 echo ""
 
-echo "Current Network Configurations"
+echo "Current Network Information"
 echo "[*] Network Interface: $WLAN"
 echo "[*] Gateway IP: $GW"
 echo "[*] Subnet IP: $CIDR"
@@ -48,7 +48,7 @@ echo ""
 read -p "Enter Router Gateway IP: " GATEWAY
 echo ""
 
-read -p "Enter Subnet Mask: " NETWORK_CIDR
+read -p "Enter Subnet Mask (e.g 10.0.0.0/20): " NETWORK_CIDR
 echo ""
 
 MYIP="$IP"
