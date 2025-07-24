@@ -2,7 +2,7 @@
 
 # Made by Xiv3r
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
-# Requires: dsniff, iptables, ipcalc, and root privileges
+# Requires: dsniff, ipcalc, and root privileges
 
 # Check if script is running as root
 if [[ $EUID -ne 0 ]]; then
@@ -45,7 +45,7 @@ GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Target IPs or CIDR
-echo "Enter Target IPs or CIDR (comma-separated, e.g., 10.0.0.123,10.0.0.124,192.168.1.0/24):"
+echo "Enter Target IPs (e.g., 10.0.0.10,10.0.0.20 or 10.0.0.0/20)"
 read -p "> " IPS
 # If no input, prompt again or exit
 if [ -z "$IPS" ]; then
