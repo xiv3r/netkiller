@@ -158,7 +158,6 @@ for TARGET in "${TARGETS[@]}"; do
     echo "Blocking $TARGET..."
 
         sudo iptables -P FORWARD DROP
-        sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
         sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
         sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
         sudo iptables -A FORWARD -d "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
