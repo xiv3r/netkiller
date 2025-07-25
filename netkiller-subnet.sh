@@ -26,6 +26,7 @@ echo "DEVICE IP: | $IP"
 echo "TARGET:    | $CIDR"
 echo ""
 
+
 # Detect Interface
 echo "Enter Wireless Interface: Skip for default"
 read -r -p "> $WLAN " WLN
@@ -57,6 +58,15 @@ echo "GATEWAY:   | $GATEWAY"
 echo "DEVICE IP: | $MYIP"
 echo "TARGETS:   | $CIDR"
 echo ""
+
+
+# Run arp-scan with provided inputs
+echo "[*] [ Scanning for Targets ] [*]"
+echo""
+arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
+echo ""
+sleep 3s
+
 
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
