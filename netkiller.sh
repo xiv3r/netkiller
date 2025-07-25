@@ -76,12 +76,23 @@ echo "[*] DEVICE IP: | $MYIP"
 echo "[*] TARGETS:   | $SUB"
 echo ""
 
+# Prompt the user for confirmation
+read -p "[*] Do you want to scan the network? (y/n) " -n 1 -r
+echo
+
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+
 # Run arp-scan to scan the target
-echo "[*] [ Scanning for Targets ] [*]"
-echo""
-arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
 echo ""
-sleep 3s
+echo "[*] [ Scanning for Target ] [*]"
+echo""
+    # Execute the command if user answered 'y' or 'Y'
+    arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
+else
+    # Skip if user answered anything else
+    echo "[*] Skipping..."
+fi
 
 # Target selection
 echo "Select Attack Type!"
