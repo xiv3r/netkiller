@@ -98,6 +98,8 @@ fi
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
+# Flush arp tables
+ip -s -s neigh flush all > /dev/null 2>&1
 # Restore default FORWARD policy
 iptables -P FORWARD ACCEPT
 # Flush iptables Forward rules
