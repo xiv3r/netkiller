@@ -2,7 +2,21 @@
 
 # ARP Spoofing Internet Blocker (Educational Purposes Only)
 # Targets all possible IPs in subnet (without scanning)
-# Requires: arpspoof, iptables, ipcalc
+# Requires: dsniff, iptables, ipcalc
+
+echo -e "\e[1;91m"
+echo "
+
+       ███╗   ██╗███████╗████████╗██╗  ██╗██╗██╗     ██╗     ███████╗██████╗
+       ████╗  ██║██╔════╝╚══██╔══╝██║ ██╔╝██║██║     ██║     ██╔════╝██╔══██╗
+       ██╔██╗ ██║█████╗     ██║   █████╔╝ ██║██║     ██║     █████╗  ██████╔╝
+       ██║╚██╗██║██╔══╝     ██║   ██╔═██╗ ██║██║     ██║     ██╔══╝  ██╔══██╗
+       ██║ ╚████║███████╗   ██║   ██║  ██╗██║███████╗███████╗███████╗██║  ██║
+       ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
+                                       WiFi Kill
+"
+echo -e "\e[1;92m                           Author: [x!v3r] github.com/xiv3r \e[0m"
+echo -e "\e[0m"
 
 # Check if script is running as root
 if [[ $EUID -ne 0 ]]; then
