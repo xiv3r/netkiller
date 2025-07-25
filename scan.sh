@@ -17,9 +17,15 @@ if ! command -v arp-scan &> /dev/null; then
   fi
 fi
 
+# Detect first interface
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+echo ""
+
 # Prompt user for network interface
-echo "Enter network interface (e.g., wlan0)"
-read -p "> " interface
+echo "Enter Wireless Interface: Skip for default"
+read -r -p "> $WLAN " WLN
+interface="${WLN:-$WLAN}"
+echo ""
 
 # Validate inputs are not empty
 if [ -z "$interface" ]; then
