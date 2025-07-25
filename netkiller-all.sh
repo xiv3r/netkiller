@@ -62,9 +62,11 @@ echo ""
 read -p "[*] Do you want to scan the network? (y/n) " -n 1 -r
 echo
 
-if [[ $REPLY =~ ^[Yy]$ ]]                                                               then
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
 
-# Run arp-scan to scan the target                                                       echo ""
+# Run arp-scan to scan the target
+echo ""
 echo "[*] [ Scanning for Target ] [*]"
 echo""
     # Execute the command if user answered 'y' or 'Y'
