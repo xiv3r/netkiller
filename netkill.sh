@@ -33,6 +33,14 @@ echo "[*] Gateway IP => $GATEWAY"
 echo "[*] Device IP  => $DEVICE_IP"
 echo "[*] Targets IP => $TARGET_INPUT"
 
+# Run arp-scan with provided inputs
+echo ""
+echo "[*] [ Scanning for Targets ] [*]"
+echo""
+arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
+echo ""
+sleep 3s
+
 # Function to expand CIDR to individual IPs using ipcalc
 expand_cidr() {
     local cidr=$1
