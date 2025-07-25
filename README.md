@@ -39,7 +39,7 @@ sudo chmod +x *.sh
 ```
 # Run
 ```
-sudo ./netkiller-multi.sh
+sudo bash netkiller.sh
 ```
 </details>
 <br>
@@ -57,26 +57,9 @@ sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubuserc
 </details>
 <br>
 
-# ⚠️ Notes
-- If you don't know the target ip, you must execute `sudo ./scan.sh`
-- Subnet must start with e.g., `10.0.0.1/20`
-- Multiple target IP's is separated by comma e.g., `10.0.0.123,10.0.0.124`
-- Remember the ⚠️ DISCLAIMER 🤭
-<br>
-
-# Scanning the target
-<details>
- <img src="https://github.com/xiv3r/netkiller/blob/main/image/scan.png">
-</details>
-
-```
-sudo bash scan.sh
-```
-<br>
-
 # Attack the target
 ```
-sudo bash netkiller-multi.sh
+sudo bash netkiller.sh
 ```
 <br>
 
@@ -107,7 +90,7 @@ git reset --hard origin/main
 <details><summary>Expand</summary>
   
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/proc.png">
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/dhcpstarvation.png">
+<img src="https://github.com/xivr/netkiller/blob/main/image/dhcpstarvation.png">
 </details></div>
 <br>
 
