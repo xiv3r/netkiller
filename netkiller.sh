@@ -11,8 +11,7 @@ echo "
        ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
                                        WiFi Kill
 "
-echo -e "\e[1;92mAuthor: [x!v3r] github.com/xiv3r \e[0m"
-
+echo -e "\e[1;92m                           Author: [x!v3r] github.com/xiv3r \e[0m"
 echo -e "\e[0m"
 
 # Check if running as root
