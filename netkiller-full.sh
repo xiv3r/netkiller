@@ -63,6 +63,7 @@ cat > /bin/netkiller-stop << 'EOF'
 
 echo "" 
 echo "Netkiller is Stopped!" 
+ip -s -s neigh flush all >/dev/null 2>&1
 iptables -t nat -F
 iptables -P FORWARD ACCEPT 
 iptables -F FORWARD
