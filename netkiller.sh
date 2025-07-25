@@ -23,8 +23,23 @@ done
 
 # Detect Current Network Configuration
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+if [[ -z "$WLAN" ]]; then
+    echo "No wireless interface found. Exiting."
+    exit 1
+fi
+
 GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
+if [[ -z "$GW" ]]; then
+    echo "No default gateway found. Exiting."
+    exit 1
+fi
+
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+if [[ -z "$IP" ]]; then
+    echo "No IP address found on interface $WLAN. Exiting."
+    exit 1
+fi
+
 echo ""
 echo "Current Network Information"
 echo "INTERFACE: | $WLAN"
@@ -34,21 +49,21 @@ echo ""
 
 # Detect Interface
 echo "Enter Wireless Interface: Enter for default"
-read -p "> $WLAN " WLN
+read -rp "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo ""
 
 # Detect Gateway IP
 echo "Enter Target Gateway: Enter for default"
-read -p "> $GW " INET
+read -rp "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo ""
 
 # Detect Target IPs or CIDR
 echo "Enter Target IP (e.g., 10.0.0.123 10.0.0.124 or 10.0.0.0/20)"
-read -p "> " IPS
+read -rp "> " IPS
 # If no input, prompt again or exit
-if [ -z "$IPS" ]; then
+if [[ -z "$IPS" ]]; then
     echo "No target IPs or CIDR provided. Exiting."
     exit 1
 fi
@@ -71,33 +86,37 @@ echo ""
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # Create stop script
-cat > /bin/netkiller-stop << EOF
+cat > /bin/netkiller-stop << 'EOF'
 #!/bin/sh
 
-sudo ip -s -s neigh flush all > /dev/null 2>&1
-sudo pkill -f arping
-sudo pkill -f arpspoof
+echo ""
 echo "Netkiller is stopped!"
+ip -s -s neigh flush all > /dev/null 2>&1
+pkill -f arping
+pkill -f arpspoof
 sleep 2s
 echo "Restoring the users connections..."
+echo ""
 EOF
-sudo chmod 755 /bin/netkiller-stop
+chmod 755 /bin/netkiller-stop
 
 # Function to expand CIDR to individual IPs using ipcalc
 expand_cidr() {
     local cidr=$1
     # Use ipcalc to get the range of IPs
-    local ip_range=$(ipcalc "$cidr" | grep '^Host' | awk '{print $2}')
-    if [ -z "$ip_range" ]; then
+    local ip_range
+    ip_range=$(ipcalc "$cidr" | grep '^Host' | awk '{print $2}')
+    if [[ -z "$ip_range" ]]; then
         echo "Invalid CIDR: $cidr. Skipping." >&2
-        return
+        return 1
     fi
     # Extract start and end IPs
-    local start_ip=$(echo "$ip_range" | cut -d'-' -f1)
-    local end_ip=$(echo "$ip_range" | cut -d'-' -f2)
+    local start_ip end_ip start end
+    start_ip=$(echo "$ip_range" | cut -d'-' -f1)
+    end_ip=$(echo "$ip_range" | cut -d'-' -f2)
     # Convert IPs to integers for iteration
-    local start=$(echo "$start_ip" | awk -F. '{print ($1*256^3)+($2*256^2)+($3*256)+$4}')
-    local end=$(echo "$end_ip" | awk -F. '{print ($1*256^3)+($2*256^2)+($3*256)+$4}')
+    start=$(echo "$start_ip" | awk -F. '{print ($1*256^3)+($2*256^2)+($3*256)+$4}')
+    end=$(echo "$end_ip" | awk -F. '{print ($1*256^3)+($2*256^2)+($3*256)+$4}')
     # Iterate through the range
     for ((i=start; i<=end; i++)); do
         # Convert integer back to IP
@@ -109,14 +128,14 @@ expand_cidr() {
 TARGET_IPS=""
 for INPUT in $INPUT_IPS; do
     # Check if input is a CIDR (contains '/')
-    if echo "$INPUT" | grep -q '/'; then
+    if [[ "$INPUT" == */* ]]; then
         # Expand CIDR to individual IPs
         IPS_EXPANDED=$(expand_cidr "$INPUT")
-        if [ -n "$IPS_EXPANDED" ]; then
+        if [[ -n "$IPS_EXPANDED" ]]; then
             # Filter out our own IP from the expanded list
             FILTERED_IPS=""
             for IP in $IPS_EXPANDED; do
-                if [ "$IP" != "$MYIP" ]; then
+                if [[ "$IP" != "$MYIP" ]]; then
                     FILTERED_IPS="$FILTERED_IPS $IP"
                 fi
             done
@@ -124,7 +143,7 @@ for INPUT in $INPUT_IPS; do
         fi
     else
         # Validate single IP format
-        if echo "$INPUT" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' > /dev/null; then
+        if [[ "$INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             TARGET_IPS="$TARGET_IPS $INPUT"
         else
             echo "Invalid IP address: $INPUT. Skipping."
@@ -134,7 +153,7 @@ done
 
 # Remove duplicates and ensure TARGET_IPS is not empty
 TARGET_IPS=$(echo "$TARGET_IPS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-if [ -z "$TARGET_IPS" ]; then
+if [[ -z "$TARGET_IPS" ]]; then
     echo "No valid IPs or CIDR ranges provided (after filtering). Exiting."
     exit 1
 fi
@@ -142,7 +161,7 @@ fi
 # Iterate over each target IP
 for TARGET in $TARGET_IPS; do
     # Skip if the target is the gateway or device IP
-    if [ "$TARGET" = "$GATEWAY" ] || [ "$TARGET" = "$MYIP" ]; then
+    if [[ "$TARGET" == "$GATEWAY" ]] || [[ "$TARGET" == "$MYIP" ]]; then
         echo "Skipping $TARGET (matches gateway or device IP)."
         continue
     fi
