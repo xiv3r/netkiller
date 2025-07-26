@@ -90,7 +90,7 @@ git reset --hard origin/main
 <details><summary>Expand</summary>
   
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/proc.png">
-<img src="https://github.com/xivr/netkiller/blob/main/image/dhcpstarvation.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/dhcpstarvation.png">
 </details></div>
 <br>
 
