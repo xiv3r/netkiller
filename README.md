@@ -3,7 +3,7 @@
 <h3 align="center">Netkiller can block or restrict any device on your WiFi network with surgical precision. Whether you’re managing home users, wifi vending machine or testing network security, NetKiller gives you the power to disconnect unwanted clients instantly with no admin access needed. </h3>
  
 <div align="center">
-<img src="https://github.com/xiv3r/netkiller/blob/main/image/netkill.png">
+<img src="https://github.com/xiv3r/netkiller/blob/main/image/wifikill.png">
 </div>
 <br>
 
