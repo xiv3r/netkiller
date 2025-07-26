@@ -10,7 +10,7 @@
 # Requirements
 - Debian/Kali/Ubuntu/Parrot/[Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
 - External or Built-in WiFi Adapter
-<br>
+- [Device i'm using](https://github.com/xiv3r/uz801-usb-pentest)
 
 # Features
 - ▶️`single target`
