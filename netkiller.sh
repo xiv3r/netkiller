@@ -95,11 +95,11 @@ fi
 echo " "
 
 # Target selection
-echo "Select Attack Type!"
-echo "1) Single Target IP"
-echo "2) Multiple Target IP's (comma separated)"
-echo "3) Target All IP's in Subnet"
-read -rp "Enter choice [1-3]: " target_type
+echo "[*] Select Attack Type [*]"
+echo "1.Single Target IP"
+echo "2.Multiple Target IP's"
+echo "3.Target All IP's"
+read -rp "Enter Choice [1-3]: " target_type
 echo ""
 
 case $target_type in
@@ -109,9 +109,8 @@ case $target_type in
         TARGETS=("$TARGET")
         ;;
     2)
-        echo "Multiple Target Users IP's: e.g 10.0.0.123,10.0.0.124"
-        read -rp "Enter Multiple Users IP's: " target_input
-        IFS=',' read -ra TARGETS <<< "$target_input"
+        echo "Multiple Target Users IP's: e.g 10.0.0.123 10.0.0.124"
+        read -rp "Enter Multiple Users IP's: " -a TARGETS
         ;;
     3)
         echo "Target All Users IP's: Enter for default"
@@ -165,9 +164,8 @@ case $target_type in
         read -rp "Do you want to exempt any additional IP's from the subnet attack? (y/n) " exempt_choice
         if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
             echo ""
-            echo "Enter IP's to exempt: e.g 10.0.0.110,10.0.0.120"
-            read -rp "> " exempt_input
-            IFS=',' read -ra EXEMPTS <<< "$exempt_input"
+            echo "Enter IP's to exempt: e.g 10.0.0.110 10.0.0.120"
+            read -rp "> " -a EXEMPTS
 
             # Remove exempt IPs from targets
             NEW_TARGETS=()
