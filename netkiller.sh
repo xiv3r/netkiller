@@ -92,6 +92,7 @@ else
     # Skip if user answered anything else
     echo "[*] Skipping..."
 fi
+echo " "
 
 # Target selection
 echo "Select Attack Type!"
