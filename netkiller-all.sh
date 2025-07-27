@@ -93,6 +93,7 @@ fi
 # Enable IP forwarding and blocking rules
 echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -P FORWARD DROP
+iptables -I FORWARD -j DROP
 iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
 
 # Create stop script
