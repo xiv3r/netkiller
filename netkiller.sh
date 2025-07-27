@@ -208,7 +208,7 @@ fi
 # Iptables policy
 iptables -P FORWARD DROP
 iptables -I FORWARD -j DROP
-iptables -t mangle -I PREROUTING -j TTL --ttl-set 0
+iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
 
 # Start ARP spoofing for each target
 PIDS=()
@@ -235,7 +235,7 @@ cleanup() {
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
     iptables -F FORWARD
-    iptables -t mangle -A PREROUTING -j TTL --ttl-set 64
+    iptables -t mangle -A PREROUTING -i "$INTERFACE" -j TTL --ttl-set 64
     echo ""
     echo "Restoring the connection..."
 }
