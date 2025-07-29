@@ -102,7 +102,7 @@ echo " "
 echo "Netkiller is stopped!"
 echo " "
 ip -s -s neigh flush all >/dev/null 2>&1
-iptables -t mangle -F FORARD 
+iptables -t mangle -F FORWARD 
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 pkill -f arpspoof
