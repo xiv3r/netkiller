@@ -124,11 +124,12 @@ case $target_type in
             exit 1
         fi
 
-        # Iptables policy
+        # Ip forwarding
         echo 1 > /proc/sys/net/ipv4/ip_forward
+
+        # iptables policy 
         iptables -P FORWARD DROP
         iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
-
 
         # Get network range using ipcalc
         NETWORK_INFO=$(ipcalc -n "$subnet")
@@ -239,10 +240,9 @@ cleanup() {
     # Flush iptables rules
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
-    iptables -D FORWARD -s "$TARGET" -j DROP
-    iptables -D FORWARD -d "$TARGET" -j DROP
-    iptables -t mangle -D FORWARD -s "$TARGET" -j TTL --ttl-set 0
-    iptables -t mangle -D PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
+    iptables -F FORWARD
+    iptables -t mangle -F FORWARD
+    iptables -t mangle -F PREROUTING
     echo ""
     echo "Restoring the connection..."
 }
