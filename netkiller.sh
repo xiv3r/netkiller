@@ -124,6 +124,12 @@ case $target_type in
             exit 1
         fi
 
+        # Iptables policy
+        iptables -P FORWARD DROP
+        iptables -I FORWARD -j DROP
+        iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
+
+
         # Get network range using ipcalc
         NETWORK_INFO=$(ipcalc -n "$subnet")
         NETWORK_ADDR=$(echo "$NETWORK_INFO" | grep 'Network:' | awk '{print $2}' | cut -d'/' -f1)
@@ -203,11 +209,6 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Aborted."
     exit 0
 fi
-
-# Iptables policy
-iptables -P FORWARD DROP
-iptables -I FORWARD -j DROP
-iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
 
 # Start ARP spoofing for each target
 PIDS=()
