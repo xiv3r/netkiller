@@ -215,7 +215,7 @@ iptables -I FORWARD -j DROP
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo ""
-    echo "Netkiller kill the connection of $TARGET"
+    echo "Netkiller killed the target IP: $TARGET"
 
     # Iptables rules
     iptables -t mangle -I FORWARD -d "$TARGET" -j TTL --ttl-set 0
