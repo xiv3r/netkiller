@@ -240,8 +240,8 @@ cleanup() {
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
     iptables -F FORWARD
-    iptables -t mangle -F FORWARD
-    iptables -t mangle -A PREROUTING -i "$INTERFACE" -j TTL --ttl-set 64
+    iptables -t mangle -D FORWARD -s "$TARGET" -j TTL --ttl-set 0
+    iptables -t mangle -D PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
     echo ""
     echo "Restoring the connection..."
 }
