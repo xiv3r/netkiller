@@ -239,7 +239,8 @@ cleanup() {
     # Flush iptables rules
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
-    iptables -F FORWARD
+    iptables -D FORWARD -s "$TARGET" -j DROP
+    iptables -D FORWARD -d "$TARGET" -j DROP
     iptables -t mangle -D FORWARD -s "$TARGET" -j TTL --ttl-set 0
     iptables -t mangle -D PREROUTING -i "$INTERFACE" -j TTL --ttl-set 0
     echo ""
