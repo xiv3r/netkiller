@@ -102,7 +102,7 @@ git reset --hard origin/main
 <br>
 
 # About netkiller
-netkiller - is a tool that blocks the wifi clients internet connection remotely without disconnecting them from the wifi AP.
+netkiller - is a tool that remotely blocks the wifi clients internet connection without disconnecting them from the wifi AP. Netkiller uses arpspoof to mimic the target arp and manipulate the traffic using iptables forward drop policy with hop ttl limit.
 
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
