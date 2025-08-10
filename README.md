@@ -57,9 +57,16 @@ sudo apt update && sudo apt install wget -y && wget -qO- https://raw.githubuserc
 </details>
 <br>
 
-# Attack the target
+# Run
 ```
 sudo bash netkiller.sh
+```
+<br>
+
+# Stop
+> Remotely restore the target wifi client internet connection.
+```
+sudo netkiller-stop
 ```
 <br>
 
@@ -92,13 +99,6 @@ git reset --hard origin/main
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/proc.png">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/dhcpstarvation.png">
 </details></div>
-<br>
-
-# Stop
-> Remotely restore the target wifi client internet connection.
-```
-sudo netkiller-stop
-```
 <br>
 
 # About netkiller
