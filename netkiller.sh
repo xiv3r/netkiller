@@ -226,28 +226,20 @@ for TARGET in "${TARGETS[@]}"; do
 done
 
 # Function to clean up
-cleanup() {
-    exec &>/dev/null
+cat > /bin/netkiller-stop << EOF
+#!/bin/bash
 
-    echo -e "\nCleaning up..."
-    # Kill all arpspoof processes
-    for pid in "${PIDS[@]}"; do
-        kill -9 "$pid" 2>/dev/null
-    done
-
-    # Flush iptables rules
+    echo -e "\nCleaning up rules..."
+    sleep 2
+    echo -e "\nUnblocking network devices..."
+    pkill -f arpspoof
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
     iptables -F FORWARD
     iptables -t mangle -F PREROUTING
-    echo ""
-    echo "Restoring the connection..."
-}
+    sleep 2
+    echo -e "\nNetkiller restored the connection!"
+EOF
+chmod 755 /bin/netkiller-stop 
 
-# Trap Ctrl+C
-trap cleanup EXIT
-
-echo -e "\nNetkiller attack is running. Press Ctrl+C to stop..."
-while true; do
-    sleep 1
-done
+echo -e "\nNetkiller attack is running. To stop, run: netkill"
