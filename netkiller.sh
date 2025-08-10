@@ -239,7 +239,8 @@ cat > /bin/netkiller-stop << EOF
     iptables -t mangle -F PREROUTING
     sleep 2
     echo -e "\nNetkiller restored the connection!"
+    echo " "
 EOF
 chmod 755 /bin/netkiller-stop 
 
-echo -e "\nNetkiller attack is running. To stop, run: netkill"
+echo -e "\nNetkiller attack is running. To stop, run: netkiller-stop"
