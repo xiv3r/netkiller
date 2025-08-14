@@ -90,7 +90,8 @@ else
 fi
 
 # Enable IP forwarding and blocking rules
-echo 1 > /proc/sys/net/ipv4/ip_forward
+sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -P FORWARD DROP
 iptables -I FORWARD -j DROP
 
