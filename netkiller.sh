@@ -207,15 +207,15 @@ fi
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
-echo "Cleaning up rules..."
+echo -e "\nCleaning up rules..."
 sleep 2
-echo "Unblocking network devices..."
+echo -e "\nUnblocking network devices..."
 pkill -f arpspoof && pkill arpspoof 
 ip -s -s neigh flush all >/dev/null 2>&1
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 sleep 2
-echo -e "\nNetkiller restoring the connection"
+echo -e "\nConnection is restored..."
 EOF
 chmod 755 /bin/netkiller-stop 
 
