@@ -1,6 +1,6 @@
 <h1 align="center"> NETKILLER </h1>
 
-<h3 align="center">Netkiller can block or restrict any device on your WiFi network with surgical precision. Whether you’re managing home users, wifi vending machine or testing network security, NetKiller gives you the power to disconnect unwanted clients instantly with no admin access needed. </h3>
+<h3 align="center">Netkiller is a tool that can remotely disconnect the internet access of any device in a WiFi network without admin access privilege. </h3>
  
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/wifikill.png">
@@ -16,7 +16,7 @@
 - ▶️`single target`
 - 🔀`multiple targets`
 - 🔁`all subnet targets`
-- 📵`block internet traffic`
+- 📵`disconnect the internet`
 - 🚫`intercept and drop traffic`
 - ❗`block all device with multiple exemption`
 - ☢️`dhcp starvation`
@@ -64,7 +64,7 @@ sudo bash netkiller.sh
 <br>
 
 # Stop
-> Remotely restore the target wifi client internet connection.
+> Remotely restore the target client IP connection.
 ```
 sudo netkiller-stop
 ```
@@ -72,10 +72,10 @@ sudo netkiller-stop
 
 # Show ARP/IP Tables
 ```
-sudo arp -e | grep wlan0
+sudo arp -e
 ```
 ```
-sudo iptables -L -v -n
+sudo iptables -t mangle -S
 ```
 
 # Update
@@ -102,7 +102,7 @@ git reset --hard origin/main
 <br>
 
 # About netkiller
-netkiller - is a tool that remotely blocks the wifi clients internet connection without disconnecting them from the wifi AP. Netkiller uses arpspoof to mimic the target arp and manipulate the traffic using iptables forward drop policy with hop ttl limit.
+netkiller - is a tool that remotely disconnect the wifi clients internet connection without deauthentication from the wifi AP. Netkiller uses arpspoof to mimic the target arp and manipulate the traffic using iptables mangle PREROUTING table drop policy.
 
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
