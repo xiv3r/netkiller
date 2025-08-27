@@ -38,8 +38,8 @@ chmod 755 /bin/netkiller-stop
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-
 echo " "
+
 # Detect interface
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 
@@ -54,7 +54,7 @@ IP_CIDR=$(ip -4 addr show "$WLAN" | grep -oP 'inet \K[\d./]+')
 SUB=$(ipcalc -n "$IP_CIDR" | grep "Network:" | awk '{print $2}')
 
 echo " "
-echo "[ Current Network Information ]"
+echo "[*] Current Network Information [*]"
 echo "[*] INTERFACE: | $WLAN"
 echo "[*] GATEWAY:   | $GW"
 echo "[*] SUBNET:    | $SUB"
@@ -63,30 +63,30 @@ echo " "
 
 # Detect Interface
 echo "Enter Wireless Interface: Skip for default"
-read -r -p "> $WLAN " WLN
+read -rp "> $WLAN " WLN
 INTERFACE="${WLN:-$WLAN}"
 echo " "
 
 # Detect Gateway IP
 echo "Enter Router Gateway IP: Skip for default"
-read -r -p "> $GW " INET
+read -rp "> $GW " INET
 GATEWAY="${INET:-$GW}"
 echo " "
 
 # Detect Subnet
 echo "Enter Subnet mask: Skip for default"
-read -r -p "> $SUB " IPS
+read -rp "> $SUB " IPS
 NETWORK_CIDR="${IPS:-$SUB}"
 echo " "
 
 # Detect Device IP
 echo "Enter Device IP: Skip for default"
-read -r -p "> $IP " DEVIP
+read -rp "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
 echo " "
 
 # Prompt configuration
-echo "[ Target Network Configuration ]"
+echo "[*] Target Network Configuration [*]"
 echo "[*] INTERFACE: | $INTERFACE"
 echo "[*] GATEWAY:   | $GATEWAY"
 echo "[*] DEVICE:    | $MYIP"
@@ -102,7 +102,7 @@ then
 
 # Run arp-scan to scan the target
 echo " "
-echo "[*] [ Scanning for Target ] [*]"
+echo "[*] Scanning for Target [*]"
 echo " "
     # Execute the command if user answered 'y' or 'Y'
     arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
@@ -113,10 +113,10 @@ fi
 echo " "
 
 # Target selection
-echo "[ Select Attack Type ]"
-echo "1.Single Target"
-echo "2.Multiple Target"
-echo "3.Target All"
+echo "[*] Select Attack Type [*]"
+echo "1 => Single Target"
+echo "2 => Multiple Target"
+echo "3 => Target All"
 read -rp "Enter Choice [1-2-3]: " target_type
 echo " "
 
@@ -221,7 +221,8 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Aborted."
     exit 0
 fi
-        
+echo " "
+
 # Start ARP spoofing for each target
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
