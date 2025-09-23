@@ -102,7 +102,7 @@ git reset --hard origin/main
 <br>
 
 # About netkiller
-netkiller - is a tool that remotely disconnect the wifi clients internet connection without deauthentication from the wifi AP. Netkiller uses arpspoof to mimic the target arp and manipulate the traffic using iptables mangle PREROUTING table drop policy.
+netkiller - is a tool that remotely disconnect the wifi clients internet connection without deauthentication from the wifi AP. Netkiller uses dsniff arpspoof to mimic the target address resolution protocol and manipulate the traffic using iptables mangle PREROUTING ttl limit 0.
 
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/flow.jpg">
