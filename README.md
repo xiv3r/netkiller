@@ -64,18 +64,21 @@ sudo bash netkiller.sh
 <br>
 
 # Stop
-> Remotely restore the target client IP connection.
+> Restore the target connection.
 ```
 sudo netkiller-stop
 ```
 <br>
 
-# Show ARP/IP Tables
+# Show ARP/Iptables/htop
 ```
 sudo arp -e
 ```
 ```
 sudo iptables -t mangle -S
+```
+```
+htop
 ```
 
 # Update
@@ -89,7 +92,7 @@ git reset --hard origin/main
 <br>
 
 # Impact
-> Impact of the remote attack on the target wifi clients connection.
+> ping 10.0.0.1 says ttl limit exceeded
 <div align="center">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/error.png">
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/noinet.png">
