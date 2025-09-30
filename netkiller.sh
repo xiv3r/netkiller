@@ -113,10 +113,10 @@ fi
 echo " "
 
 # Target selection
-echo "[*] Select Attack Type [*]"
-echo "1 => Single Target"
-echo "2 => Multiple Target"
-echo "3 => Target All"
+echo "[*] Select Attack [*]"
+echo "1.Single Target"
+echo "2.Multiple Target"
+echo "3.Target All"
 read -rp "Enter Choice [1-2-3]: " target_type
 echo " "
 
