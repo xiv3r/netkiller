@@ -92,24 +92,18 @@ fi
 # Enable IP forwarding and blocking rules
 sudo echo 1 > /proc/sys/net/ipv4/ip_forward
 sudo echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -P FORWARD DROP
-iptables -I FORWARD -j DROP
 
 # Create stop script
 cat > /bin/netkiller-stop << 'EOF'
 #!/bin/sh
 
 echo " "
-echo "Netkiller is stopped!"
+echo "Netkiller is Stop..."
 echo " "
-ip -s -s neigh flush all >/dev/null 2>&1
 iptables -t mangle -F PREROUTING
-iptables -P FORWARD ACCEPT
-iptables -F FORWARD
 pkill -f arpspoof
-sleep 2s
-echo "Restoring the connection..."
-echo ""
+pkill arpspoof
+echo " "
 EOF
 chmod 755 /bin/netkiller-stop
 
@@ -143,5 +137,5 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     done
 fi
 echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
-echo ""
+echo " "
 echo "To stop, Type: sudo netkiller-stop"
