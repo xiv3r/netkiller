@@ -231,6 +231,7 @@ PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
      iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
+     iptables -t mangle -A FORWARD -s "$TARGET" -j DROP
      iptables -A FORWARD -s "$TARGET" -j DROP
      iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
      iptables -t mangle -A PREROUTING -s "$TARGET" -j TTL --ttl-set 0
