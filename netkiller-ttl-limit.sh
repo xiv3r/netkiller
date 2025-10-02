@@ -36,7 +36,8 @@ echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
-iptables -t mangle -F
+iptables -t mangle -F PREROUTING
+iptables -t mangle -F FORWARD
 iptables -F FORWARD
 sleep 2
 echo -e "\nConnection is restored..."
