@@ -28,8 +28,8 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -P FORWARD DROP
 iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-ulimit -u 4000
-ulimit -n 65536
+ulimit -u 8192
+ulimit -n 65535
 sysctl -w net.ipv4.neigh.default.gc_thresh3=8192
 
 # Create stop script
