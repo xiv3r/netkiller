@@ -235,4 +235,3 @@ done
 echo " "
 echo "To stop Netkiller, run: netkiller-stop"
 echo " "
-arp -e
