@@ -24,7 +24,7 @@ fi
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -P FORWARD DROP
-iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+# iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -j DROP
 echo " "
 
