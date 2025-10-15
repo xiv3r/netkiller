@@ -6,11 +6,26 @@
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/wifikill.png">
 </div>
 <br>
+# ⚠️ WARNING ⚠️ 
+`This tool can disrupt your system routing connections` you can check your system by running
+```
+iptables -S
+iptables -t mangle -S
+iptables -t nat -S
+```
+if there's any existing iptables rules do a backup 
+```
+iptables-save >/etc/iptables/rules.v4
+```
+to restore you're connections
+```
+iptables-restore >/etc/iptables/rules.v4
+```
 
 # Requirements
 - Debian/Kali/Ubuntu/Parrot/[Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
 - External or Built-in WiFi Adapter
-- [Device i'm using](https://github.com/xiv3r/uz801-usb-pentest)
+- [Device i'm used](https://github.com/xiv3r/uz801-usb-pentest)
 
 # Features
 - ▶️`single target`
