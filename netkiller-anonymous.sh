@@ -23,7 +23,6 @@ fi
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -t mangle -A FORWARD -j TTL --ttl-set 0
 iptables -A FORWARD -p tcp -j REJECT --reject-with tcp-reset
 echo " "
