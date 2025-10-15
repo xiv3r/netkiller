@@ -6,7 +6,9 @@
 <img src="https://github.com/xiv3r/netkiller/blob/main/image/wifikill.png">
 </div>
 <br>
-# ⚠️ WARNING ⚠️ 
+
+# ⚠️ WARNING ⚠️
+
 `This tool can disrupt your system routing connections` you can check your system by running
 ```
 iptables -S
@@ -15,11 +17,11 @@ iptables -t nat -S
 ```
 if there's any existing iptables rules do a backup 
 ```
-iptables-save >/etc/iptables/rules.v4
+iptables-save > /etc/iptables/rules.v4
 ```
 to restore you're connections
 ```
-iptables-restore >/etc/iptables/rules.v4
+iptables-restore < /etc/iptables/rules.v4
 ```
 
 # Requirements
