@@ -26,6 +26,7 @@ fi
 # Enable IP forwarding and blocking rules
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+iptables -A FORWARD -p tcp -j REJECT --reject-with tcp-reset
 iptables -t mangle -A PREROUTING -j TTL --ttl-set 0
 ulimit -u 8192
 ulimit -n 65535
@@ -39,6 +40,7 @@ echo " "
 echo "Netkiller is Stop..."
 echo " "
 iptables -t mangle -F FORWARD
+iptables -F FORWARD 
 pkill -f arpspoof
 pkill arpspoof
 echo " "
