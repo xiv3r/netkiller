@@ -24,22 +24,18 @@ fi
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -t mangle -A PREROUTING -j TTL --ttl-set 0
-
 echo " "
 
 # Functions for clean up
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
-echo -e "\nCleaning up rules..."
-sleep 2
-echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
-ip -s -s neigh flush all >/dev/null 2>&1
 iptables -t mangle -F PREROUTING
-sleep 2
-echo -e "\nConnection is restored..."
+echo " "
+echo "Stopping Netkiller!"
+echo " "
 EOF
 chmod 755 /bin/netkiller-stop
 
