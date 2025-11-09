@@ -31,15 +31,13 @@ echo " "
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
-echo -e "\nCleaning up rules..."
-sleep 2
-echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
 iptables -t mangle -F FORWARD 
 iptables -F FORWARD
-sleep 2
-echo -e "\nConnection is restored..."
+echo " "
+echo "Stopping Netkiller!"
+echo " "
 EOF
 chmod 755 /bin/netkiller-stop
 
