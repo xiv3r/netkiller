@@ -26,8 +26,8 @@ fi
 # Enable IP forwarding and blocking rules
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -A FORWARD -p tcp -j REJECT --reject-with tcp-reset
-iptables -t mangle -A PREROUTING -j TTL --ttl-set 0
+iptables -P FORWARD DROP
+iptables -A FORWARD -j DROP
 ulimit -u 8192
 ulimit -n 65535
 sysctl -w net.ipv4.neigh.default.gc_thresh3=8192 >/dev/null
@@ -37,13 +37,12 @@ cat > /bin/netkiller-stop << 'EOF'
 #!/bin/sh
 
 echo " "
-echo "Netkiller is Stop..."
+echo "Stopping Netkiller!"
 echo " "
-iptables -t mangle -F FORWARD
+iptables -P FORWARD ACCEPT
 iptables -F FORWARD 
 pkill -f arpspoof
 pkill arpspoof
-echo " "
 EOF
 chmod 755 /bin/netkiller-stop
 
