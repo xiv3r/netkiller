@@ -7,7 +7,10 @@
 </div>
 <br>
 
-# ⚠️ WARNING ⚠️
+<details><summary>
+
+## ⚠️ WARNING
+</summary>
 
 `This tool can disrupt your system routing connections` you can check your system by running
 ```
@@ -19,24 +22,24 @@ if there's any existing iptables rules do a backup
 ```
 iptables-save > /etc/iptables/rules.v4
 ```
-to restore you're connections
+to restore you're connections back
 ```
 iptables-restore < /etc/iptables/rules.v4
 ```
+</details>
 
 # Requirements
 - Debian/Kali/Ubuntu/Parrot/[Kali Termux (root)](https://github.com/xiv3r/Kali-Linux-Termux)
 - External or Built-in WiFi Adapter
-- [Device i'm used](https://github.com/xiv3r/uz801-usb-pentest)
+- [My Device](https://github.com/xiv3r/uz801-usb-pentest)
 
 # Features
 - ▶️`single target`
 - 🔀`multiple targets`
 - 🔁`all subnet targets`
 - 📵`disconnect the internet`
-- 🚫`intercept and drop traffic`
+- 🚫`limit the traffic speed`
 - ❗`block all device with multiple exemption`
-- ☢️`dhcp starvation`
 - ☣️`arp spoofing`
 - 💪`accuracy rate 95%`
 
