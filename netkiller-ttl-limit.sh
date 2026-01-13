@@ -34,7 +34,7 @@ pkill -f arpspoof
 pkill arpspoof
 iptables -t mangle -F PREROUTING
 echo " "
-echo "Stopping Netkiller!"
+echo "Netkiller is stop...!!!"
 echo " "
 EOF
 chmod 755 /bin/netkiller-stop
