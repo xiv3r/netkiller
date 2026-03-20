@@ -95,6 +95,9 @@ sudo netkiller-stop
 sudo arp -e
 ```
 ```
+sudo iptables -S
+```
+```
 sudo iptables -t mangle -S
 ```
 ```
